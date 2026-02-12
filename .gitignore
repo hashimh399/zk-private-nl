@@ -1,0 +1,33 @@
+# Node
+node_modules/
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Foundry
+contracts/lib/
+contracts/out/
+contracts/cache/
+
+# Circom
+circuits/build/
+circuits/*.r1cs
+circuits/*.wasm
+circuits/*.zkey
+circuits/*.ptau
+
+# Frontend
+frontend/.next/
+frontend/out/
+
+# CRE
+.workflows/
+
+# OS
+.DS_Store
+Thumbs.db
