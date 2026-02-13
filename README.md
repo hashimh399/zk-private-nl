@@ -1,4 +1,4 @@
-# NeuroLedger — ZK Private Pass–Gated Lending + Chainlink CRE Risk Orchestration
+# NeuroLedger — ZK Private Pass–Gated Lending + Chainlink CRE Risk Orchestration 
 
 **Chainlink Convergence Hackathon Submission**  
 A Next-Gen Lending (NL) protocol on **Ethereum Sepolia** where borrowing is gated by:
