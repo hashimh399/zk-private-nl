@@ -22,8 +22,8 @@ circuits/*.zkey
 circuits/*.ptau
 
 # Frontend
-frontend/.next/
-frontend/out/
+client/.next/
+client/out/
 
 # CRE
 .workflows/

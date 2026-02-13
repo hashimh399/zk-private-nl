@@ -1,4 +1,4 @@
-# NeuroLedger — ZK Private Pass–Gated Lending + Chainlink CRE Risk Orchestration (Gemini)
+# NeuroLedger — ZK Private Pass–Gated Lending + Chainlink CRE Risk Orchestration
 
 **Chainlink Convergence Hackathon Submission**  
 A Next-Gen Lending (NL) protocol on **Ethereum Sepolia** where borrowing is gated by:
@@ -104,40 +104,3 @@ User calls `BorrowGate.executeBorrow(requestId)`:
 - calls into `lp.sol` borrow path (HF re-check still enforced)
 - mints/credits `NL` token to borrower if safe
 
----
-
-## Repository Structure
-
-```text
-contracts/
-  lp.sol
-  vault.sol
-  mockoracle.sol
-  nl.sol
-  BorrowGate.sol
-  BorrowApprovalRegistry.sol
-  CREBorrowDecisionReceiver.sol
-  ZKPassVerifier.sol
-
-circuits/
-  zkpass.circom
-  build/ (wasm, zkey, verification key)
-
-workflows/
-  zkpass-risk-orchestrator/
-    workflow.yaml
-    main.ts
-    config.staging.json
-    config.production.json
-
-frontend/
-  nextjs-app/ (neuroledger.com client)
-
-scripts/
-  issue-pass.ts
-  publish-root.ts
-  prove.ts
-
-project.yaml
-secrets.yaml
-.env.example
