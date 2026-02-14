@@ -5,7 +5,7 @@ TRUST ASSUMPTIONS:
 - Oracle updates must not occur in same tx as borrow/liquidate.
 - Admin is expected to pause protocol during oracle incidents.
 */
-
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
