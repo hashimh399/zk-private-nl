@@ -1,0 +1,18 @@
+{
+  "geminiModel": "gemini-2.5-flash",
+  "riskApiUrl": "https://api.alternative.me/fng/?limit=1",
+  "decisionPolicy": {
+    "fearGreedMin": 25,
+    "minHfAfter1e18": "1100000000000000000",
+    "maxLtvAfterBps": 7500,
+    "maxBorrowAmount": "1000000000000000000000"
+  },
+  "evms": [
+    {
+      "chainSelectorName": "ethereum-testnet-sepolia",
+      "borrowGateAddress": "0x0000000000000000000000000000000000000000",
+      "receiverAddress": "0x0000000000000000000000000000000000000000",
+      "gasLimit": "1000000"
+    }
+  ]
+}

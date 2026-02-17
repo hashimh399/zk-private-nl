@@ -1,0 +1,16 @@
+# workflows/project.yaml
+# ==========================================================================
+# CRE PROJECT SETTINGS FILE
+# ==========================================================================
+
+local-simulation:
+  rpcs:
+    - chain-name: ethereum-testnet-sepolia
+      url: https://0xrpc.io/sep # replace with your Sepolia RPC
+
+staging:
+  cre-cli:
+    don-family: "zone-a"
+  rpcs:
+    - chain-name: ethereum-testnet-sepolia
+      url: https://0xrpc.io/sep # replace

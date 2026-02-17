@@ -1,0 +1,16 @@
+# workflows/zkpass-borrow-risk/workflow.yaml
+local-simulation:
+  user-workflow:
+    workflow-name: "zkpass-borrow-risk"
+  workflow-artifacts:
+    workflow-path: "./main.ts"
+    config-path: "./config.json"
+    secrets-path: "../secrets.yaml"
+
+staging:
+  user-workflow:
+    workflow-name: "zkpass-borrow-risk"
+  workflow-artifacts:
+    workflow-path: "./main.ts"
+    config-path: "./config.json"
+    secrets-path: "../secrets.yaml"
