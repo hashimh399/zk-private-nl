@@ -1,17 +1,13 @@
 {
-  "name": "zkpass-borrow-risk",
-  "version": "1.0.0",
+  "name": "zkpass-risk-orchestrator",
   "private": true,
-  "main": "dist/main.js",
-  "scripts": {
-    "postinstall": "bunx cre-setup"
-  },
+  "type": "module",
   "dependencies": {
-    "@chainlink/cre-sdk": "0.0.8-alpha",
-    "viem": "^2.38.3",
-    "zod": "^4.1.12"
+    "@chainlink/cre-sdk": "^1.0.0",
+    "viem": "^2.38.0"
   },
   "devDependencies": {
-    "@types/bun": "1.2.21"
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
   }
 }

@@ -1,185 +1,598 @@
-// workflows/zkpass-borrow-risk/main.ts
 import {
+  Runner,
+  bytesToHex,
+  consensusMedianAggregation,
+  encodeCallMsg,
+  getNetwork,
+  handler,
+  hexToBase64,
   cre,
   type Runtime,
-  Runner,
-  getNetwork,
-  bytesToHex,
-  type EVMLog,
-} from "@chainlink/cre-sdk";
-import { keccak256, toHex, decodeEventLog, parseAbi } from "viem";
+  type HTTPSendRequester,
+} from "@chainlink/cre-sdk"
 
 import {
-  configSchema,
-  type Config,
-  ReasonCode,
-  GeminiAdvisorySchema,
-} from "./types";
-import { readBorrowRequest, writeBorrowDecisionReport } from "./evm";
-import { fetchFearGreedIndex } from "./risk";
-import { askGeminiAdvisory } from "./gemini";
+  decodeAbiParameters,
+  encodeAbiParameters,
+  encodeFunctionData,
+  keccak256,
+  toBytes,
+  zeroAddress,
+  type Address,
+} from "viem"
 
-const eventAbi = parseAbi([
-  "event BorrowRequested(uint256 indexed requestId,address indexed borrower,uint256 indexed nullifier,uint256 amount,address asset)",
-]);
-const eventSignature = "BorrowRequested(uint256,address,uint256,uint256,address)";
+import {
+  BorrowGateAbi,
+  BorrowApprovalRegistryAbi,
+  LendingPoolAbi,
+} from "../contracts/abi/index.js"
 
-function computeGuardrails(runtime: Runtime<Config>, args: {
-  fearGreed: number | null;
-  hfAfter1e18: bigint;
-  ltvAfterBps: number;
-  amount: bigint;
-}): { approved: boolean; reason: ReasonCode } {
-  const p = runtime.config.decisionPolicy;
-  const minHf = BigInt(p.minHfAfter1e18);
-  const maxBorrow = BigInt(p.maxBorrowAmount);
+type Config = {
+  chainSelectorName: string
+  borrowGateAddress: Address
+  lendingPoolAddress: Address
+  registryAddress: Address
+  receiverAddress: Address
 
-  if (args.fearGreed === null) return { approved: false, reason: ReasonCode.OFFCHAIN_RISK_API_ERROR };
-  if (args.fearGreed < p.fearGreedMin) return { approved: false, reason: ReasonCode.FEAR_GREED_TOO_LOW };
-  if (args.hfAfter1e18 < minHf) return { approved: false, reason: ReasonCode.HF_TOO_LOW };
-  if (args.ltvAfterBps > p.maxLtvAfterBps) return { approved: false, reason: ReasonCode.LTV_TOO_HIGH };
-  if (args.amount > maxBorrow) return { approved: false, reason: ReasonCode.AMOUNT_TOO_HIGH };
+  riskApiUrl: string
 
-  return { approved: true, reason: ReasonCode.OK_APPROVED };
+  minFearGreed: number
+  minHfAfterE18: string
+  maxLtvBps: number
+  maxBorrowAmountWei: string
+
+  enableGemini: boolean
+  geminiModel: string
+
+  gasLimit: string
 }
 
-const onLogTrigger = (runtime: Runtime<Config>, log: EVMLog): string => {
-  // 1) Decode BorrowRequested
-  const topics = log.topics.map((t) => bytesToHex(t)) as [`0x${string}`, ...`0x${string}`[]];
-  const data = bytesToHex(log.data);
+type EVMLog = {
+  topics: Uint8Array[]
+  data: Uint8Array
+}
 
-  const decodedLog = decodeEventLog({ abi: eventAbi, data, topics });
-  const requestId = decodedLog.args.requestId as bigint;
-  const borrower = decodedLog.args.borrower as `0x${string}`;
-  const nullifier = decodedLog.args.nullifier as bigint;
+const HF_ONE = 10n ** 18n
+const PCT_BASE = 100n
 
-  runtime.log(`BorrowRequested: requestId=${requestId.toString()} borrower=${borrower} nullifier=${nullifier.toString()}`);
+function clampUint16(x: bigint): number {
+  if (x < 0n) return 0
+  if (x > 65535n) return 65535
+  return Number(x)
+}
 
-  // 2) Onchain read: BorrowGate.getBorrowRequest(requestId)
-  const req = readBorrowRequest(runtime, requestId);
+function bytesToBase64(bytes: Uint8Array): string {
+  const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+  let out = ""
+  let i = 0
+  for (; i + 2 < bytes.length; i += 3) {
+    const n = (bytes[i] << 16) | (bytes[i + 1] << 8) | bytes[i + 2]
+    out +=
+      alphabet[(n >> 18) & 63] +
+      alphabet[(n >> 12) & 63] +
+      alphabet[(n >> 6) & 63] +
+      alphabet[n & 63]
+  }
+  const rem = bytes.length - i
+  if (rem === 1) {
+    const n = bytes[i] << 16
+    out += alphabet[(n >> 18) & 63] + alphabet[(n >> 12) & 63] + "=="
+  } else if (rem === 2) {
+    const n = (bytes[i] << 16) | (bytes[i + 1] << 8)
+    out += alphabet[(n >> 18) & 63] + alphabet[(n >> 12) & 63] + alphabet[(n >> 6) & 63] + "="
+  }
+  return out
+}
 
-  // Optional safety cross-check: event must match stored request
-  if (req.borrower.toLowerCase() !== borrower.toLowerCase() || req.nullifier !== nullifier) {
-    runtime.log(`Mismatch between event and onchain request. Rejecting.`);
-    const txHash = writeBorrowDecisionReport(runtime, {
-      requestId,
-      nullifier,
-      approved: false,
-      reasonCode: ReasonCode.ONCHAIN_CONTEXT_MISMATCH,
-      fearGreed: 0,
-      ltvBps: req.ltvAfterBps,
-      hfAfter1e18: req.hfAfter1e18,
-      llmRiskScoreBp: 0,
-      llmRec: 0,
-      llmResponseHash: "0x0000000000000000000000000000000000000000000000000000000000000000",
-    });
-    runtime.log(`Decision write txHash=${txHash}`);
-    return "Rejected: context mismatch";
+function getRespBodyBytes(resp: any): Uint8Array {
+  const b = resp?.body
+  if (!b) return new Uint8Array()
+  if (b instanceof Uint8Array) return b
+  if (Array.isArray(b)) return new Uint8Array(b)
+  if (ArrayBuffer.isView(b) && b.buffer) return new Uint8Array(b.buffer, b.byteOffset, b.byteLength)
+  return new Uint8Array()
+}
+
+function parseJsonBody(resp: any): any {
+  const bodyBytes = getRespBodyBytes(resp)
+  const text = new TextDecoder().decode(bodyBytes)
+  return JSON.parse(text)
+}
+
+/**
+ * CRE SDK callContract return shape differs across versions.
+ * This safely extracts the ABI-encoded return bytes.
+ */
+function getReturnBytes(res: any, label: string): Uint8Array {
+  const raw = res?.data ?? res?.returnData ?? res?.result?.data ?? res?.result?.returnData
+
+  if (!raw) {
+    throw new Error(`${label}: callContract returned no data/returnData`)
   }
 
-  // 3) Offchain risk API
-  let fearGreed: number | null = null;
+  if (raw instanceof Uint8Array) return raw
+  if (ArrayBuffer.isView(raw) && raw.buffer) return new Uint8Array(raw.buffer, raw.byteOffset, raw.byteLength)
+  if (Array.isArray(raw)) return new Uint8Array(raw)
+
+  throw new Error(`${label}: unsupported return bytes type`)
+}
+
+function extractJson(text: string): any | null {
+  const s = text.indexOf("{")
+  const e = text.lastIndexOf("}")
+  if (s === -1 || e === -1 || e <= s) return null
   try {
-    fearGreed = fetchFearGreedIndex(runtime);
-    runtime.log(`FearGreed=${fearGreed}`);
-  } catch (e) {
-    runtime.log(`FearGreed fetch failed: ${String(e)}`);
-    fearGreed = null;
+    return JSON.parse(text.slice(s, e + 1))
+  } catch {
+    return null
+  }
+}
+//new patch
+function safeSnippet(s: string, max = 180): string {
+  const oneLine = s.replace(/\s+/g, " ").trim()
+  return oneLine.length <= max ? oneLine : oneLine.slice(0, max) + "…"
+}
+
+function fetchGeminiRiskScoreWithDebug(
+  send: HTTPSendRequester,
+  apiKey: string,
+  model: string,
+  prompt: string
+): { score: number; status: number; snippet: string } {
+  const modelPath = model.startsWith("models/") ? model : `models/${model}`
+  const url = `https://generativelanguage.googleapis.com/v1beta/${modelPath}:generateContent?key=${apiKey}`
+
+  const payload = {
+    contents: [{ role: "user", parts: [{ text: prompt }] }],
+    generationConfig: {
+      temperature: 0,
+      maxOutputTokens: 256,
+      responseMimeType: "application/json",
+    },
   }
 
-  // 4) Deterministic guardrails
-  const guardrail = computeGuardrails(runtime, {
-    fearGreed,
-    hfAfter1e18: req.hfAfter1e18,
-    ltvAfterBps: req.ltvAfterBps,
-    amount: req.amount,
-  });
+  const bodyBytes = new TextEncoder().encode(JSON.stringify(payload))
 
-  // 5) Gemini advisory (optional / non-safety-critical)
-  let llmRiskScoreBp = 0;
-  let llmRec = 0; // 0=INCONCLUSIVE,1=APPROVE,2=REJECT
-  let llmHash: `0x${string}` =
-    "0x0000000000000000000000000000000000000000000000000000000000000000";
+  const resp = send
+    .sendRequest({
+      url,
+      method: "POST",
+      timeout: "12s",
+      headers: { "Content-Type": "application/json" },
+      body: bytesToBase64(bodyBytes),
+    })
+    .result()
+
+  let score = 0
+  let snippet = ""
 
   try {
-    const guardrailDecisionStr = guardrail.approved ? "APPROVE" : "REJECT";
-    const advisoryInput = {
-      requestId: requestId.toString(),
-      borrower: req.borrower,
-      amount: req.amount.toString(),
-      hfAfter1e18: req.hfAfter1e18.toString(),
-      ltvAfterBps: req.ltvAfterBps,
-      fearGreed,
-      guardrailDecision: guardrailDecisionStr,
-      guardrailReasonCode: guardrail.reason,
-    };
-
-    // Keep input JSON stable: stringify an object literal with fixed key insertion order.
-    const advisoryInputJson = JSON.stringify(advisoryInput);
-
-    const g = askGeminiAdvisory(runtime, advisoryInputJson);
-    runtime.log(`Gemini responseId=${g.responseId} advisory=${g.advisoryJson}`);
-
-    // Validate strict JSON schema
-    const parsed = GeminiAdvisorySchema.parse(JSON.parse(g.advisoryJson));
-    llmRiskScoreBp = parsed.riskScoreBp;
-
-    if (parsed.recommendation === "APPROVE") llmRec = 1;
-    else if (parsed.recommendation === "REJECT") llmRec = 2;
-    else llmRec = 0;
-
-    // Hash full advisory JSON for audit anchoring
-    llmHash = keccak256(toHex(g.advisoryJson));
-  } catch (e) {
-    runtime.log(`Gemini advisory failed/invalid: ${String(e)}`);
-    // keep defaults; guardrails still decide
+    if (resp.statusCode === 200) {
+      const body = parseJsonBody(resp)
+      const text = body?.candidates?.[0]?.content?.parts?.[0]?.text
+      if (typeof text === "string") {
+        snippet = safeSnippet(text, 180)
+        const parsed = extractJson(text)
+        const s = Number(parsed?.riskScoreBp ?? 0)
+        if (Number.isFinite(s) && s >= 0 && s <= 10000) score = Math.trunc(s)
+      }
+    }
+  } catch {
+    // keep defaults
   }
 
-  // 6) Final decision = guardrails (deterministic), plus advisory fields for transparency
-  const txHash = writeBorrowDecisionReport(runtime, {
-    requestId,
-    nullifier,
-    approved: guardrail.approved,
-    reasonCode: guardrail.reason,
-    fearGreed: fearGreed ?? 0,
-    ltvBps: req.ltvAfterBps,
-    hfAfter1e18: req.hfAfter1e18,
-    llmRiskScoreBp,
-    llmRec,
-    llmResponseHash: llmHash,
-  });
+  return { score, status: resp.statusCode ?? 0, snippet }
+}
 
-  runtime.log(`Decision recorded: approved=${guardrail.approved} reason=${guardrail.reason} txHash=${txHash}`);
-  return guardrail.approved ? "Approved" : "Rejected";
-};
 
-const initWorkflow = (config: Config) => {
+/**
+ * Risk API: Alternative.me Fear & Greed
+ * Returns -1 on failure (fail-closed).
+ */
+function fetchFearGreed(send: HTTPSendRequester, url: string): number {
+  const resp = send
+    .sendRequest({
+      url,
+      method: "GET",
+      timeout: "7s",
+      headers: { Accept: "application/json" },
+    })
+    .result()
+
+  if (resp.statusCode !== 200) return -1
+
+  try {
+    const body = parseJsonBody(resp)
+    const v = Number(body?.data?.[0]?.value ?? -1)
+    if (!Number.isFinite(v) || v < 0 || v > 100) return -1
+    return Math.trunc(v)
+  } catch {
+    return -1
+  }
+}
+
+/**
+ * Gemini returns advisory riskScoreBp [0..10000].
+ * Returns 0 on any failure (advisory only).
+ */
+function fetchGeminiRiskScore(
+  send: HTTPSendRequester,
+  apiKey: string,
+  model: string,
+  prompt: string
+): number {
+  const modelPath = model.startsWith("models/") ? model : `models/${model}`
+  const url = `https://generativelanguage.googleapis.com/v1beta/${modelPath}:generateContent?key=${apiKey}`
+
+  const payload = {
+    contents: [{ role: "user", parts: [{ text: prompt }] }],
+    generationConfig: {
+      temperature: 0,
+      maxOutputTokens: 256,
+      responseMimeType: "application/json",
+    },
+  }
+
+  const bodyBytes = new TextEncoder().encode(JSON.stringify(payload))
+
+  const resp = send
+    .sendRequest({
+      url,
+      method: "POST",
+      timeout: "12s",
+      headers: { "Content-Type": "application/json" },
+      body: bytesToBase64(bodyBytes), // CRE HTTP expects base64 body
+    })
+    .result()
+
+  if (resp.statusCode !== 200) return 0
+
+  try {
+    const body = parseJsonBody(resp)
+    const text = body?.candidates?.[0]?.content?.parts?.[0]?.text
+    if (typeof text !== "string") return 0
+    const parsed = extractJson(text)
+    if (!parsed) return 0
+    const score = Number(parsed?.riskScoreBp ?? 0)
+    if (!Number.isFinite(score) || score < 0 || score > 10000) return 0
+    return Math.trunc(score)
+  } catch {
+    return 0
+  }
+}
+
+function initWorkflow(config: Config) {
   const network = getNetwork({
     chainFamily: "evm",
-    chainSelectorName: config.evms[0].chainSelectorName,
+    chainSelectorName: config.chainSelectorName,
     isTestnet: true,
-  });
-  if (!network) throw new Error(`Network not found: ${config.evms[0].chainSelectorName}`);
+  })
+  if (!network) throw new Error(`Network not found: ${config.chainSelectorName}`)
 
-  const evmClient = new cre.capabilities.EVMClient(network.chainSelector.selector);
+  // IMPORTANT: pass the selector (bigint), not an object
+  const evmClient = new cre.capabilities.EVMClient(network.chainSelector.selector)
+  const httpClient = new cre.capabilities.HTTPClient()
 
-  const topic0 = keccak256(toHex(eventSignature));
+  const BORROW_REQUESTED_SIG = "BorrowRequested(uint256,address,bytes32,uint256)"
+  const topic0 = keccak256(toBytes(BORROW_REQUESTED_SIG))
 
-  return [
-    cre.handler(
-      evmClient.logTrigger({
-        addresses: [config.evms[0].borrowGateAddress],
-        topics: [{ values: [topic0] }],
-        confidence: "CONFIDENCE_LEVEL_FINALIZED",
-      }),
-      onLogTrigger,
-    ),
-  ];
-};
+  const trigger = evmClient.logTrigger({
+    addresses: [hexToBase64(config.borrowGateAddress)],
+    topics: [{ values: [hexToBase64(topic0)] }],
+  })
 
-export async function main() {
-  const runner = await Runner.newRunner({ configSchema });
-  await runner.run(initWorkflow);
+  const onLog = handler(trigger, (runtime: Runtime<Config>, log: EVMLog) => {
+    const cfg = runtime.config
+
+    // Decode indexed topics
+    const requestId = BigInt(bytesToHex(log.topics[1]))
+
+    const borrowerTopicHex = bytesToHex(log.topics[2]) // 0x + 64 hex chars
+    const borrower = ("0x" + borrowerTopicHex.slice(-40)) as Address
+
+    const nullifier = bytesToHex(log.topics[3]) as `0x${string}`
+
+    // --- Read BorrowGate.requests(requestId)
+    const reqCall = encodeFunctionData({
+      abi: BorrowGateAbi,
+      functionName: "requests",
+      args: [requestId],
+    })
+
+    const reqRes = evmClient
+      .callContract(runtime, {
+        call: encodeCallMsg({
+          from: zeroAddress,
+          to: cfg.borrowGateAddress,
+          data: reqCall,
+        }),
+      })
+      .result()
+
+    const reqBytes = getReturnBytes(reqRes, "BorrowGate.requests")
+    const [reqBorrower, reqAmount, reqNullifier, executed] = decodeAbiParameters(
+      [
+        { type: "address" },
+        { type: "uint256" },
+        { type: "bytes32" },
+        { type: "bool" },
+      ],
+      bytesToHex(reqBytes)
+    ) as [Address, bigint, `0x${string}`, boolean]
+
+    if (
+      executed ||
+      reqBorrower.toLowerCase() !== borrower.toLowerCase() ||
+      reqNullifier.toLowerCase() !== nullifier.toLowerCase()
+    ) {
+      return "Request invalid/stale; skipping"
+    }
+
+    // --- If already decided, skip
+    const decidedCall = encodeFunctionData({
+      abi: BorrowApprovalRegistryAbi,
+      functionName: "isDecided",
+      args: [nullifier],
+    })
+
+    const decidedRes = evmClient
+      .callContract(runtime, {
+        call: encodeCallMsg({
+          from: zeroAddress,
+          to: cfg.registryAddress,
+          data: decidedCall,
+        }),
+      })
+      .result()
+
+    const [alreadyDecided] = decodeAbiParameters(
+      [{ type: "bool" }],
+      bytesToHex(getReturnBytes(decidedRes, "Registry.isDecided"))
+    ) as [boolean]
+
+    if (alreadyDecided) {
+      return "Already decided; skipping"
+    }
+
+    // --- Read LendingPool context
+    let collValue: bigint | null = null
+    let debt: bigint | null = null
+    let liqThr: bigint | null = null
+    let hfNow: bigint | null = null
+
+    try {
+      const collValueCall = encodeFunctionData({
+        abi: LendingPoolAbi,
+        functionName: "collateralValueOf",
+        args: [borrower],
+      })
+      const debtCall = encodeFunctionData({
+        abi: LendingPoolAbi,
+        functionName: "tokenDebt",
+        args: [borrower],
+      })
+      const liqThrCall = encodeFunctionData({
+        abi: LendingPoolAbi,
+        functionName: "liquidationThreshold",
+        args: [],
+      })
+      const hfNowCall = encodeFunctionData({
+        abi: LendingPoolAbi,
+        functionName: "HealthFactor",
+        args: [borrower],
+      })
+
+      const collRes = evmClient
+        .callContract(runtime, { call: encodeCallMsg({ from: zeroAddress, to: cfg.lendingPoolAddress, data: collValueCall }) })
+        .result()
+      ;[collValue] = decodeAbiParameters([{ type: "uint256" }], bytesToHex(getReturnBytes(collRes, "Pool.collateralValueOf"))) as [bigint]
+
+      const debtRes = evmClient
+        .callContract(runtime, { call: encodeCallMsg({ from: zeroAddress, to: cfg.lendingPoolAddress, data: debtCall }) })
+        .result()
+      ;[debt] = decodeAbiParameters([{ type: "uint256" }], bytesToHex(getReturnBytes(debtRes, "Pool.tokenDebt"))) as [bigint]
+
+      const liqRes = evmClient
+        .callContract(runtime, { call: encodeCallMsg({ from: zeroAddress, to: cfg.lendingPoolAddress, data: liqThrCall }) })
+        .result()
+      ;[liqThr] = decodeAbiParameters([{ type: "uint256" }], bytesToHex(getReturnBytes(liqRes, "Pool.liquidationThreshold"))) as [bigint]
+
+      const hfRes = evmClient
+        .callContract(runtime, { call: encodeCallMsg({ from: zeroAddress, to: cfg.lendingPoolAddress, data: hfNowCall }) })
+        .result()
+      ;[hfNow] = decodeAbiParameters([{ type: "uint256" }], bytesToHex(getReturnBytes(hfRes, "Pool.HealthFactor"))) as [bigint]
+    } catch (e: any) {
+      // This is where your earlier "STALE PRICE" revert happens.
+      // Fail closed but still write a REJECT report so the request can be marked decided.
+      const approved = false
+      const reasonCode = 6 // Onchain context read failed (e.g., oracle stale)
+
+      const payload = encodeAbiParameters(
+        [
+          { type: "bytes32" },
+          { type: "bool" },
+          { type: "uint8" },
+          { type: "uint16" },
+          { type: "uint16" },
+        ],
+        [nullifier, approved, reasonCode, 0, 65535]
+      )
+
+      const report = runtime
+        .report({
+          encodedPayload: hexToBase64(payload),
+          encoderName: "evm",
+          signingAlgo: "ecdsa",
+          hashingAlgo: "keccak256",
+        })
+        .result()
+
+      evmClient
+        .writeReport(runtime, {
+          receiver: cfg.receiverAddress,
+          report,
+          gasConfig: { gasLimit: cfg.gasLimit },
+        })
+        .result()
+
+      return `REJECT reason=6 (pool/oracle read failed: ${String(e?.message ?? e)})`
+    }
+
+    // At this point we have pool context
+    const debtAfter = (debt as bigint) + reqAmount
+
+    const hfAfter =
+      debtAfter === 0n
+        ? (2n ** 256n - 1n)
+        : ((collValue as bigint) * (liqThr as bigint) * HF_ONE) / (debtAfter * PCT_BASE)
+
+    const ltvBpsBig =
+      (collValue as bigint) === 0n ? 65535n : (debtAfter * 10000n) / (collValue as bigint)
+    const ltvBps = clampUint16(ltvBpsBig)
+
+    // --- External risk API
+    const fearGreed = httpClient
+      .sendRequest(runtime, fetchFearGreed, consensusMedianAggregation<number>())(cfg.riskApiUrl)
+      .result()
+
+    // --- Gemini (optional)
+    // let riskScoreBp = 0
+    // if (cfg.enableGemini) {
+    //   const apiKey = runtime.getSecret({ id: "GEMINI_API_KEY" }).result().value
+
+    //   const prompt = [
+    //     "You are a deterministic risk scoring function.",
+    //     "Return ONLY JSON.",
+    //     "",
+    //     "Schema:",
+    //     '{ "riskScoreBp": number }',
+    //     "",
+    //     "Inputs:",
+    //     `fearGreed=${fearGreed}`,
+    //     `hfNowE18=${(hfNow as bigint).toString()}`,
+    //     `hfAfterE18=${hfAfter.toString()}`,
+    //     `ltvBpsAfter=${ltvBps}`,
+    //     `borrowAmountWei=${reqAmount.toString()}`,
+    //     "",
+    //     "Rules:",
+    //     "- riskScoreBp must be an integer in [0,10000].",
+    //     "- Higher score = higher risk.",
+    //   ].join("\n")
+
+    //   riskScoreBp = httpClient
+    //     .sendRequest(runtime, fetchGeminiRiskScore, consensusMedianAggregation<number>())(apiKey, cfg.geminiModel, prompt)
+    //     .result()
+    // }
+    let riskScoreBp = 0
+    let geminiStatus = 0
+    let geminiSnippet = ""
+
+if (cfg.enableGemini) {
+  const apiKey = runtime.getSecret({ id: "GEMINI_API_KEY" }).result().value
+
+  const prompt = [
+    "You are a deterministic risk scoring function.",
+    "Return ONLY JSON.",
+    "",
+    "Schema:",
+    '{ "riskScoreBp": number }',
+    "",
+    "Inputs:",
+    `fearGreed=${fearGreed}`,
+    `hfNowE18=${(hfNow as bigint).toString()}`,
+    `hfAfterE18=${hfAfter.toString()}`,
+    `ltvBpsAfter=${ltvBps}`,
+    `borrowAmountWei=${reqAmount.toString()}`,
+    "",
+    "Rules:",
+    "- riskScoreBp must be an integer in [0,10000].",
+    "- Higher score = higher risk.",
+  ].join("\n")
+
+  const g = httpClient
+    .sendRequest(runtime, fetchGeminiRiskScoreWithDebug, consensusMedianAggregation<{ score: number; status: number; snippet: string }>())(
+      apiKey,
+      cfg.geminiModel,
+      prompt
+    )
+    .result()
+// const g = httpClient
+//   .sendRequest(runtime, fetchGeminiRiskScoreWithDebug, consensusMedianAggregation())(
+//     apiKey,
+//     cfg.geminiModel,
+//     prompt
+//   )
+//   .result()
+
+
+  riskScoreBp = g.score
+  geminiStatus = g.status
+  geminiSnippet = g.snippet
 }
 
-main();
+
+    // --- Deterministic decision
+    const minHfAfter = BigInt(cfg.minHfAfterE18)
+    const maxBorrowAmount = BigInt(cfg.maxBorrowAmountWei)
+
+    let approved = true
+    let reasonCode = 0
+
+    if (fearGreed < 0) {
+      approved = false
+      reasonCode = 5 // risk API failed
+    } else if (fearGreed < cfg.minFearGreed) {
+      approved = false
+      reasonCode = 1
+    } else if (hfAfter < minHfAfter) {
+      approved = false
+      reasonCode = 2
+    } else if (BigInt(ltvBps) > BigInt(cfg.maxLtvBps)) {
+      approved = false
+      reasonCode = 3
+    } else if (reqAmount > maxBorrowAmount) {
+      approved = false
+      reasonCode = 4
+    }
+
+    // --- Encode report payload for receiver
+    const payload = encodeAbiParameters(
+      [
+        { type: "bytes32" },
+        { type: "bool" },
+        { type: "uint8" },
+        { type: "uint16" },
+        { type: "uint16" },
+      ],
+      [nullifier, approved, reasonCode, clampUint16(BigInt(riskScoreBp)), ltvBps]
+    )
+
+    const report = runtime
+      .report({
+        encodedPayload: hexToBase64(payload),
+        encoderName: "evm",
+        signingAlgo: "ecdsa",
+        hashingAlgo: "keccak256",
+      })
+      .result()
+
+    evmClient
+      .writeReport(runtime, {
+        receiver: cfg.receiverAddress,
+        report,
+        gasConfig: { gasLimit: cfg.gasLimit },
+      })
+      .result()
+
+    //return `Decision=${approved ? "APPROVE" : "REJECT"} reason=${reasonCode} fearGreed=${fearGreed} ltvBps=${ltvBps} riskScoreBp=${riskScoreBp}`
+    return `Decision=${approved ? "APPROVE" : "REJECT"} reason=${reasonCode} fearGreed=${fearGreed} ltvBps=${ltvBps} riskScoreBp=${riskScoreBp} geminiStatus=${geminiStatus} gemini="${geminiSnippet}"`
+
+  })
+
+  return [onLog]
+}
+
+export async function main() {
+  const runner = await Runner.newRunner<Config>()
+  await runner.run(initWorkflow)
+}

@@ -89,7 +89,7 @@ function toSolidityProof(proof) {
     c: sol.c,
   };
 
-  const outPath = path.join(__dirname, "..", "proofCalldata.json");
+  const outPath = path.join(__dirname, "..", `proof.${pass.borrower}.nonce${pass.nonce}.json`);
   fs.writeFileSync(outPath, JSON.stringify(out, null, 2));
 
   console.log("✅ Wrote calldata:", outPath);

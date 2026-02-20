@@ -6,11 +6,16 @@
 local-simulation:
   rpcs:
     - chain-name: ethereum-testnet-sepolia
-      url: https://0xrpc.io/sep # replace with your Sepolia RPC
+      url: https://go.getblock.io/88340b65d2b74c55ba01fcbb24fc4f0b
 
 staging:
   cre-cli:
     don-family: "zone-a"
   rpcs:
     - chain-name: ethereum-testnet-sepolia
-      url: https://0xrpc.io/sep # replace
+      url: https://go.getblock.io/88340b65d2b74c55ba01fcbb24fc4f0b
+
+staging-settings:
+  rpcs:
+    - chain-name: ethereum-testnet-sepolia
+      url: https://go.getblock.io/88340b65d2b74c55ba01fcbb24fc4f0b

@@ -1,0 +1,20 @@
+{
+  "chainSelectorName": "ethereum-testnet-sepolia",
+
+  "borrowGateAddress": "0x95AE78a528000Ccd84a7862ba50bd96B9ddBa1eD",
+  "lendingPoolAddress": "0xE0136F9a3155F4A8D86DB6F3Fc17043d7ad45a85",
+  "registryAddress": "0x5996b480a0207619026A9BC55aaf9fBAD8D0d3ff",
+  "receiverAddress": "0xc97d7E41414faCBA40020EAC065B32A6a3FF612c",
+
+  "riskApiUrl": "https://api.alternative.me/fng/?limit=1",
+
+  "minFearGreed": 2,
+  "minHfAfterE18": "1100000000000000000",
+  "maxLtvBps": 8000,
+  "maxBorrowAmountWei": "100000000000000000000",
+
+  "enableGemini": true,
+  "geminiModel": "gemini-2.5-flash",
+
+  "gasLimit": "900000"
+}
