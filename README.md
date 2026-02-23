@@ -29,7 +29,7 @@ Borrowing is intelligently gated by a **zkPass ZK Proof** (for privacy-preservin
 
 NeuroLedger seamlessly blends complex on-chain invariants with off-chain artificial intelligence via the Chainlink Oracle Network.
 
-![System Architecture](.docs/architecture.png)
+![System Architecture](./docs/architecture.png)
 
 ---
 
