@@ -1,3 +1,4 @@
+import React, { useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import {
   ArrowRight,
@@ -12,6 +13,88 @@ import {
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 
+// --- Custom Background Component ---
+const BlockchainNetworkBg = () => {
+  const canvasRef = useRef(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext("2d");
+    let animationFrameId;
+    let particles = [];
+
+    const resize = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+    window.addEventListener("resize", resize);
+    resize();
+
+    class Particle {
+      constructor() {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height;
+        this.vx = (Math.random() - 0.5) * 0.5;
+        this.vy = (Math.random() - 0.5) * 0.5;
+        this.radius = Math.random() * 2 + 1;
+        // Mix of Purple and Orange
+        this.color = Math.random() > 0.5 ? "#a855f7" : "#f97316"; 
+      }
+      update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+        if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+      }
+      draw() {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fillStyle = this.color;
+        ctx.fill();
+      }
+    }
+
+    for (let i = 0; i < 80; i++) particles.push(new Particle());
+
+    const animate = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      particles.forEach((p) => {
+        p.update();
+        p.draw();
+      });
+
+      // Draw connections
+      for (let i = 0; i < particles.length; i++) {
+        for (let j = i + 1; j < particles.length; j++) {
+          const dx = particles[i].x - particles[j].x;
+          const dy = particles[i].y - particles[j].y;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+
+          if (distance < 150) {
+            ctx.beginPath();
+            ctx.strokeStyle = `rgba(168, 85, 247, ${1 - distance / 150})`; // Fading purple lines
+            ctx.lineWidth = 0.5;
+            ctx.moveTo(particles[i].x, particles[i].y);
+            ctx.lineTo(particles[j].x, particles[j].y);
+            ctx.stroke();
+          }
+        }
+      }
+      animationFrameId = requestAnimationFrame(animate);
+    };
+    animate();
+
+    return () => {
+      window.removeEventListener("resize", resize);
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, []);
+
+  return <canvas ref={canvasRef} className="fixed inset-0 z-0 bg-[#0a0a0a]" />;
+};
+
+// --- Protocol Data ---
 const PROTOCOL_THESIS =
   "This is a privacy-preserving lending flow where ZK proves eligibility, and Chainlink CRE runs a decentralized risk engine (with consensus) that attests an approval/rejection onchain—bringing institutional-grade risk controls to private DeFi.";
 
@@ -39,9 +122,9 @@ const systemOverview = [
       "BorrowGate, Groth16Verifier, BorrowApprovalRegistry, LendingPool, NL token, Vault, and receiver contracts enforce verification, credit gating, mint/debt accounting, and settlement logic.",
   },
   {
-    title: "Offchain Risk Fabric (Chainlink CRE)",
+    title: "Offchain Risk Fabric",
     details:
-      "A decentralized workflow reacts to BorrowRequested events, evaluates policy/risk inputs, reaches consensus, then posts signed/forwarded reports onchain.",
+      "A decentralized workflow reacts to BorrowRequested events, evaluates policy/risk inputs, reaches consensus, then posts signed/forwarded reports onchain via Chainlink CRE.",
   },
   {
     title: "Client + Prover",
@@ -81,174 +164,199 @@ const roadmap = [
   "Policy versioning, governance controls, and formalized risk parameter change management.",
   "Independent risk adapters (multiple providers) with CRE consensus hardening.",
   "Expanded collateral sets and cross-chain settlement rails.",
-  "Security hardening: audits, invariant/property testing, and formal verification for critical modules.",
+  "Security hardening: audits, invariant/property testing, and formal verification.",
   "Institutional controls: reporting APIs, attestations, and SOC/operational readiness.",
 ];
 
+// --- Main Page Component ---
 const Index = () => {
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar />
+    <div className="min-h-screen relative text-slate-200 overflow-hidden font-sans">
+      <BlockchainNetworkBg />
+      
+      {/* Top Gradient Overlay for readability */}
+      <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-black/80 to-transparent z-10 pointer-events-none" />
 
-      <main className="pt-24 pb-16 px-6">
-        <div className="max-w-6xl mx-auto space-y-12">
-          <section className="card-elevated p-8 md:p-10 space-y-5">
-            <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-mono text-primary">
-              <Network className="w-3.5 h-3.5" />
-              Protocol Page · Sepolia
-            </div>
-            <h1 className="text-4xl md:text-5xl font-black tracking-tight">
-              NeuroLedger Protocol
-            </h1>
-            <p className="text-muted-foreground text-lg leading-relaxed max-w-4xl">
-              {PROTOCOL_THESIS}
-            </p>
-            <div className="flex flex-wrap gap-3">
-              <Link
-                to="/zk-private-lending"
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-primary text-primary-foreground font-semibold hover:opacity-90 transition-opacity"
-              >
-                Open Live Demo <ArrowRight className="w-4 h-4" />
-              </Link>
-              <Link
-                to="/admin"
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg border border-border text-foreground hover:bg-muted transition-colors"
-              >
-                Open Admin Dashboard
-              </Link>
-            </div>
-          </section>
+      <div className="relative z-20">
+        <Navbar />
 
-          <section className="grid lg:grid-cols-3 gap-6">
-            {systemOverview.map((item) => (
-              <article key={item.title} className="card-elevated p-6">
-                <h2 className="text-xl font-bold mb-3">{item.title}</h2>
-                <p className="text-sm text-muted-foreground leading-relaxed">{item.details}</p>
-              </article>
-            ))}
-          </section>
-
-          <section className="card-elevated p-8 space-y-6">
-            <h2 className="section-heading">Architecture Diagram 1 · ZK Proof Flow (Groth16)</h2>
-            <p className="text-sm text-muted-foreground">
-              Generation to onchain verification pipeline, including witness/public signal boundaries and replay protection.
-            </p>
-            <div className="grid md:grid-cols-2 gap-3 font-mono text-xs">
-              {zkFlow.map((line) => (
-                <div key={line} className="rounded-md border border-border bg-muted/40 px-3 py-2">
-                  {line}
+        <main className="pt-32 pb-24 px-6">
+          <div className="max-w-6xl mx-auto space-y-16">
+            
+            {/* HERO SECTION */}
+            <section className="backdrop-blur-md bg-black/40 border border-purple-500/20 rounded-3xl p-8 md:p-12 shadow-[0_0_50px_-12px_rgba(168,85,247,0.3)] space-y-6 text-center lg:text-left flex flex-col lg:flex-row items-center gap-10">
+              <div className="flex-1 space-y-6">
+                <div className="inline-flex items-center gap-2 rounded-full border border-orange-500/50 bg-orange-500/10 px-4 py-1.5 text-sm font-mono text-orange-400">
+                  <Network className="w-4 h-4" />
+                  Live on Sepolia Testnet
                 </div>
-              ))}
-            </div>
-            <p className="text-sm text-muted-foreground">
-              <span className="font-semibold text-foreground">Explainer:</span> private borrower inputs never need to be revealed onchain; only
-              cryptographic validity and constrained public signals are verified before request registration.
-            </p>
-          </section>
-
-          <section className="card-elevated p-8 space-y-6">
-            <h2 className="section-heading">Architecture Diagram 2 · Borrow Lifecycle with CRE Decisioning</h2>
-            <p className="text-sm text-muted-foreground">
-              End-to-end sequence from collateralization to borrow execution after decentralized risk attestation.
-            </p>
-            <div className="grid md:grid-cols-2 gap-3 font-mono text-xs">
-              {borrowLifecycle.map((line) => (
-                <div key={line} className="rounded-md border border-border bg-muted/40 px-3 py-2">
-                  {line}
+                
+                <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-purple-500 to-purple-400">
+                  NeuroLedger
+                </h1>
+                
+                <p className="text-slate-300 text-lg md:text-xl leading-relaxed max-w-2xl">
+                  {PROTOCOL_THESIS}
+                </p>
+                
+                <div className="flex flex-wrap items-center justify-center lg:justify-start gap-4 pt-4">
+                  <Link
+                    to="/zk-private-lending"
+                    className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-orange-500 text-white font-bold hover:scale-105 transition-transform shadow-lg shadow-purple-500/25"
+                  >
+                    Launch DApp <ArrowRight className="w-5 h-5" />
+                  </Link>
+                  <Link
+                    to="/admin"
+                    className="inline-flex items-center gap-2 px-6 py-3 rounded-xl border border-purple-500/30 bg-black/50 text-slate-300 hover:bg-purple-900/30 transition-colors"
+                  >
+                    Open Admin Dashboard
+                  </Link>
                 </div>
-              ))}
-            </div>
-            <p className="text-sm text-muted-foreground">
-              <span className="font-semibold text-foreground">Explainer:</span> ZK handles privacy-preserving eligibility at request time;
-              Chainlink CRE handles institutional-style risk scoring and consensus attestation before any mint/debt transition is allowed.
-            </p>
-          </section>
-
-          <section className="card-elevated p-8 space-y-6">
-            <h2 className="section-heading">Architecture Diagram 3 · System Overview</h2>
-            <div className="grid md:grid-cols-3 gap-4 text-sm">
-              <div className="rounded-lg border border-border bg-muted/30 p-4">
-                <p className="font-semibold mb-2">User + Client</p>
-                <p className="text-muted-foreground">Wallet connect, proof submission, decision polling, execution, and lifecycle actions.</p>
               </div>
-              <div className="rounded-lg border border-border bg-muted/30 p-4">
-                <p className="font-semibold mb-2">Sepolia Contracts</p>
-                <p className="text-muted-foreground">Borrow gatekeeping, proof verification, decision registry, debt/collateral accounting, token minting.</p>
-              </div>
-              <div className="rounded-lg border border-border bg-muted/30 p-4">
-                <p className="font-semibold mb-2">Chainlink CRE</p>
-                <p className="text-muted-foreground">Event-triggered consensus workflow, external risk signals, report forwarding and onchain attestation.</p>
-              </div>
-            </div>
-            <p className="text-sm text-muted-foreground">
-              <span className="font-semibold text-foreground">Explainer:</span> this split cleanly separates privacy proofs, policy/risk orchestration,
-              and deterministic settlement logic into independently auditable layers.
-            </p>
-          </section>
-
-          <section className="grid lg:grid-cols-2 gap-6">
-            <article className="card-elevated p-7 space-y-4">
-              <h2 className="section-heading inline-flex items-center gap-2">
-                <Eye className="w-5 h-5 text-primary" /> How ZK Proofs Are Used
-              </h2>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li>• Borrow eligibility is proven without exposing private identity/witness data.</li>
-                <li>• Proof includes bound public values (root, amount, nullifier, nonce) checked by verifier contract.</li>
-                <li>• BorrowGate only records a request after successful verifier return.</li>
-                <li>• Nullifier pattern prevents proof reuse and replay across attempts.</li>
-              </ul>
-            </article>
-
-            <article className="card-elevated p-7 space-y-4">
-              <h2 className="section-heading inline-flex items-center gap-2">
-                <Shield className="w-5 h-5 text-primary" /> How Chainlink CRE Is Used
-              </h2>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li>• CRE listens for borrow request events and evaluates risk with decentralized execution.</li>
-                <li>• Consensus-driven decision output is forwarded onchain through receiver + registry.</li>
-                <li>• Borrow execution path references registry approval status per nullifier/request.</li>
-                <li>• This creates a clear audit trail from event trigger to final risk attestation.</li>
-              </ul>
-            </article>
-          </section>
-
-          <section className="card-elevated p-8 space-y-4">
-            <h2 className="section-heading">Protocol Invariants Enforced</h2>
-            <div className="grid md:grid-cols-2 gap-3">
-              {invariants.map((item) => (
-                <div key={item} className="flex items-start gap-2 rounded-md border border-border bg-muted/30 p-3 text-sm">
-                  <CheckCircle2 className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
-                  <span className="text-muted-foreground">{item}</span>
+              
+              {/* Feature/Logo Integration */}
+              <div className="w-full lg:w-1/3 flex flex-col gap-4">
+                <div className="p-6 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm flex items-center gap-4">
+                   {/* Replace src with actual Chainlink logo path */}
+                  <img src="https://cryptologos.cc/logos/chainlink-link-logo.svg?v=029" alt="Chainlink" className="w-10 h-10" loading="lazy" />
+                  <div>
+                    <p className="font-bold text-white">Powered by CRE</p>
+                    <p className="text-xs text-slate-400">Decentralized Risk Engine</p>
+                  </div>
                 </div>
-              ))}
-            </div>
-          </section>
+                <div className="p-6 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm flex items-center gap-4">
+                  <Shield className="w-10 h-10 text-purple-400" />
+                  <div>
+                    <p className="font-bold text-white">Zero-Knowledge</p>
+                    <p className="text-xs text-slate-400">Groth16 Proof Verification</p>
+                  </div>
+                </div>
+              </div>
+            </section>
 
-          <section className="space-y-6">
-            <h2 className="section-heading">Real-World Use Cases</h2>
-            <div className="grid md:grid-cols-3 gap-6">
-              {useCases.map((u) => (
-                <article key={u.title} className="card-elevated p-6">
-                  <u.icon className="w-6 h-6 text-primary mb-3" />
-                  <h3 className="font-semibold mb-2">{u.title}</h3>
-                  <p className="text-sm text-muted-foreground">{u.desc}</p>
+            {/* ARCHITECTURE PLACEHOLDERS */}
+            <div className="space-y-10">
+              <div className="text-center space-y-2">
+                <h2 className="text-3xl font-bold text-white">Protocol Architecture</h2>
+                <p className="text-slate-400">End-to-end integration mapping for the Convergence Hackathon</p>
+              </div>
+
+              {/* Diagram 1: ZK Proof Flow */}
+              <section className="backdrop-blur-sm bg-black/30 border border-white/10 rounded-2xl p-8 overflow-hidden relative group">
+                <div className="absolute top-0 left-0 w-2 h-full bg-purple-500" />
+                <h3 className="text-2xl font-bold mb-4 text-white">1. ZK Proof Flow (Groth16)</h3>
+                
+                {/* Lazy Loaded Image Placeholder - Replace src with your public repo raw URL */}
+                <div className="w-full h-64 md:h-96 bg-black/50 rounded-xl mb-6 flex items-center justify-center border border-white/5 overflow-hidden">
+                  <img 
+                    src="https://placehold.co/1200x600/111111/a855f7?text=ZK+Proof+Architecture+Diagram\n(Replace+with+Github+Raw+URL)" 
+                    alt="ZK Flow Diagram" 
+                    loading="lazy"
+                    className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
+                  />
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-4 font-mono text-sm">
+                  {zkFlow.map((line, idx) => (
+                    <div key={idx} className="rounded-lg border border-purple-500/20 bg-purple-500/5 p-4 text-slate-300">
+                      {line}
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              {/* Diagram 2: Borrow Lifecycle & CRE */}
+              <section className="backdrop-blur-sm bg-black/30 border border-white/10 rounded-2xl p-8 overflow-hidden relative group">
+                <div className="absolute top-0 left-0 w-2 h-full bg-orange-500" />
+                <h3 className="text-2xl font-bold mb-4 text-white flex items-center gap-3">
+                  2. Borrow Lifecycle & Chainlink CRE
+                  <img src="https://cryptologos.cc/logos/chainlink-link-logo.svg?v=029" alt="Chainlink" className="w-6 h-6" loading="lazy" />
+                </h3>
+                
+                {/* Lazy Loaded Image Placeholder - Replace src with your public repo raw URL */}
+                <div className="w-full h-64 md:h-96 bg-black/50 rounded-xl mb-6 flex items-center justify-center border border-white/5 overflow-hidden">
+                  <img 
+                    src="https://placehold.co/1200x600/111111/f97316?text=CRE+Borrow+Lifecycle+Diagram\n(Replace+with+Github+Raw+URL)" 
+                    alt="Borrow Lifecycle Diagram" 
+                    loading="lazy"
+                    className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
+                  />
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-4 font-mono text-sm">
+                  {borrowLifecycle.map((line, idx) => (
+                    <div key={idx} className="rounded-lg border border-orange-500/20 bg-orange-500/5 p-4 text-slate-300">
+                      {line}
+                    </div>
+                  ))}
+                </div>
+              </section>
+            </div>
+
+            {/* SYSTEM OVERVIEW GRID */}
+            <section className="grid lg:grid-cols-3 gap-6">
+              {systemOverview.map((item, idx) => (
+                <article key={item.title} className="backdrop-blur-sm bg-white/5 border border-white/10 rounded-2xl p-6 hover:bg-white/10 transition-colors">
+                  <div className={`w-12 h-12 rounded-full mb-4 flex items-center justify-center ${idx === 1 ? 'bg-orange-500/20 text-orange-400' : 'bg-purple-500/20 text-purple-400'}`}>
+                    {idx === 0 ? <Network /> : idx === 1 ? <Shield /> : <Eye />}
+                  </div>
+                  <h2 className="text-xl font-bold mb-3 text-white">{item.title}</h2>
+                  <p className="text-sm text-slate-400 leading-relaxed">{item.details}</p>
                 </article>
               ))}
-            </div>
-          </section>
+            </section>
 
-          <section className="card-elevated p-8 space-y-4">
-            <h2 className="section-heading inline-flex items-center gap-2">
-              <Milestone className="w-5 h-5 text-primary" /> Roadmap to Institutional-Grade Adoption
-            </h2>
-            <ul className="space-y-2 text-sm text-muted-foreground">
-              {roadmap.map((step) => (
-                <li key={step}>• {step}</li>
-              ))}
-            </ul>
-          </section>
-        </div>
-      </main>
+            {/* INVARIANTS */}
+            <section className="backdrop-blur-sm bg-gradient-to-br from-purple-900/20 to-black border border-purple-500/30 rounded-2xl p-8">
+              <h2 className="text-2xl font-bold text-white mb-6">Protocol Invariants Enforced</h2>
+              <div className="grid md:grid-cols-2 gap-4">
+                {invariants.map((item) => (
+                  <div key={item} className="flex items-start gap-3 rounded-xl bg-black/40 p-4 border border-white/5">
+                    <CheckCircle2 className="w-5 h-5 text-purple-400 mt-0.5 flex-shrink-0" />
+                    <span className="text-slate-300 text-sm leading-relaxed">{item}</span>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            {/* USE CASES & ROADMAP */}
+            <div className="grid lg:grid-cols-2 gap-8">
+              <section className="space-y-6">
+                <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+                  <Landmark className="text-orange-400" /> Real-World Use Cases
+                </h2>
+                <div className="space-y-4">
+                  {useCases.map((u) => (
+                    <article key={u.title} className="backdrop-blur-sm bg-white/5 border border-white/10 rounded-xl p-5 flex gap-4 items-start hover:border-orange-500/30 transition-colors">
+                      <u.icon className="w-6 h-6 text-orange-400 flex-shrink-0" />
+                      <div>
+                        <h3 className="font-bold text-white mb-1">{u.title}</h3>
+                        <p className="text-sm text-slate-400">{u.desc}</p>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              </section>
+
+              <section className="backdrop-blur-sm bg-white/5 border border-white/10 rounded-2xl p-8 h-full">
+                <h2 className="text-2xl font-bold text-white flex items-center gap-2 mb-6">
+                  <Milestone className="text-purple-400" /> Path to Production
+                </h2>
+                <ul className="space-y-4 text-sm text-slate-300">
+                  {roadmap.map((step, idx) => (
+                    <li key={idx} className="flex gap-3 items-start">
+                      <div className="w-1.5 h-1.5 rounded-full bg-purple-500 mt-2 flex-shrink-0" />
+                      <span className="leading-relaxed">{step}</span>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            </div>
+
+          </div>
+        </main>
+      </div>
     </div>
   );
 };
