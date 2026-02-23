@@ -858,6 +858,13 @@ interface ActivityItem {
   timestamp: Date;
 }
 
+interface PersistedActivityItem {
+  id: string;
+  label: string;
+  txHash?: string;
+  timestamp: string;
+}
+
 function isBytes32(x?: string | null): x is Hex32 {
   return !!x && x.startsWith("0x") && x.length === 66;
 }
@@ -907,6 +914,9 @@ export default function ZKPrivateLending() {
   const [generatingProof, setGeneratingProof] = useState(false);
 
   const isReady = isConnected && chainId === SEPOLIA_CHAIN_ID;
+  const activityStorageKey = address
+    ? `zk-private-lending:activity:${chainId}:${address.toLowerCase()}`
+    : "";
 
   // --- Reads
   const { data: ethCollateral, refetch: refetchCollateral } = useReadContract({
@@ -973,18 +983,148 @@ export default function ZKPrivateLending() {
     refetchHF();
     refetchNL();
     if (requestId !== null) refetchRequestState();
+    fetchOnchainActivity();
   };
 
   // --- Writes
   const { writeContract, data: lastTxHash, isPending } = useWriteContract();
   const { isLoading: isConfirming } = useWaitForTransactionReceipt({ hash: lastTxHash });
 
-  const addActivity = (label: string, hash?: string) => {
-    setActivity((prev) => [
-      { id: crypto.randomUUID(), label, txHash: hash, timestamp: new Date() },
-      ...prev,
-    ].slice(0, 20));
+  const mergeActivity = (items: ActivityItem[]) => {
+    const byKey = new Map<string, ActivityItem>();
+    for (const item of items) {
+      const key = item.txHash ? `${item.label}:${item.txHash.toLowerCase()}` : `${item.label}:${item.id}`;
+      const existing = byKey.get(key);
+      if (!existing || existing.timestamp < item.timestamp) {
+        byKey.set(key, item);
+      }
+    }
+    return Array.from(byKey.values())
+      .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
+      .slice(0, 40);
   };
+
+  const addActivity = (label: string, hash?: string) => {
+    setActivity((prev) =>
+      mergeActivity([
+        { id: crypto.randomUUID(), label, txHash: hash, timestamp: new Date() },
+        ...prev,
+      ])
+    );
+  };
+
+  const fetchOnchainActivity = async () => {
+    if (!publicClient || !address || !isReady) return;
+
+    try {
+      const latestBlock = await publicClient.getBlockNumber();
+      const window = 120_000n;
+      const fromBlock = latestBlock > window ? latestBlock - window : 0n;
+
+      const requestedLogs = await publicClient.getLogs({
+        address: CONTRACTS.borrowGate,
+        event: {
+          type: "event",
+          name: "BorrowRequested",
+          inputs: [
+            { name: "requestId", type: "uint256", indexed: true },
+            { name: "borrower", type: "address", indexed: true },
+            { name: "nullifier", type: "bytes32", indexed: true },
+            { name: "amount", type: "uint256", indexed: false },
+          ],
+        },
+        args: { borrower: address },
+        fromBlock,
+        toBlock: "latest",
+      } as const);
+
+      const requestIdToNullifier = new Map<string, string>();
+      const items: ActivityItem[] = [];
+
+      for (const log of requestedLogs) {
+        const args = log.args as any;
+        const txHash = log.transactionHash;
+        const requestId = args?.requestId ? args.requestId.toString() : "?";
+        const amount = args?.amount ? Number(formatEther(args.amount)).toFixed(4) : "?";
+        const nullifierVal = args?.nullifier as string | undefined;
+        if (nullifierVal) {
+          requestIdToNullifier.set(requestId, nullifierVal.toLowerCase());
+        }
+        items.push({
+          id: txHash ? `${txHash}:request` : crypto.randomUUID(),
+          label: `Borrow requested (#${requestId}, ${amount} NL)`,
+          txHash: txHash as `0x${string}` | undefined,
+          timestamp: new Date(),
+        });
+      }
+
+      const executedLogs = await publicClient.getLogs({
+        address: CONTRACTS.borrowGate,
+        event: {
+          type: "event",
+          name: "BorrowExecuted",
+          inputs: [
+            { name: "requestId", type: "uint256", indexed: true },
+            { name: "nullifier", type: "bytes32", indexed: true },
+          ],
+        },
+        fromBlock,
+        toBlock: "latest",
+      } as const);
+
+      for (const log of executedLogs) {
+        const args = log.args as any;
+        const requestId = args?.requestId ? args.requestId.toString() : "?";
+        const eventNullifier = (args?.nullifier as string | undefined)?.toLowerCase();
+        const knownNullifier = requestIdToNullifier.get(requestId);
+        if (!eventNullifier || !knownNullifier || eventNullifier !== knownNullifier) continue;
+
+        items.push({
+          id: log.transactionHash ? `${log.transactionHash}:execute` : crypto.randomUUID(),
+          label: `Borrow executed (#${requestId})`,
+          txHash: log.transactionHash as `0x${string}` | undefined,
+          timestamp: new Date(),
+        });
+      }
+
+      setActivity((prev) => mergeActivity([...items, ...prev]));
+    } catch (e) {
+      console.error("Failed to fetch on-chain activity", e);
+    }
+  };
+
+  useEffect(() => {
+    if (!activityStorageKey) return;
+    try {
+      const raw = localStorage.getItem(activityStorageKey);
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as PersistedActivityItem[];
+      const hydrated = parsed
+        .map((x) => ({ ...x, timestamp: new Date(x.timestamp) }))
+        .filter((x) => !Number.isNaN(x.timestamp.getTime()));
+      if (hydrated.length > 0) {
+        setActivity((prev) => mergeActivity([...hydrated, ...prev]));
+      }
+    } catch {
+      // ignore invalid local cache
+    }
+  }, [activityStorageKey]);
+
+  useEffect(() => {
+    if (!activityStorageKey) return;
+    const payload: PersistedActivityItem[] = activity.map((item) => ({
+      id: item.id,
+      label: item.label,
+      txHash: item.txHash,
+      timestamp: item.timestamp.toISOString(),
+    }));
+    localStorage.setItem(activityStorageKey, JSON.stringify(payload));
+  }, [activity, activityStorageKey]);
+
+  useEffect(() => {
+    if (!isReady || !address || !publicClient) return;
+    fetchOnchainActivity();
+  }, [isReady, address, publicClient]);
 
   // --- HF formatting
   const hfFormatted = useMemo(() => {
