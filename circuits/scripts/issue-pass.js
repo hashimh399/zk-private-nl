@@ -47,9 +47,13 @@ function normalizeLeaves(rawLeaves) {
 }
 
 (async () => {
-  const borrower = process.argv[2];
-  if (!borrower || !borrower.startsWith("0x") || borrower.length !== 42) {
-    console.error("Usage: node scripts/issue-pass.js <borrowerAddress0x...>");
+  // Read addresses from addresses.json in the parent directory
+  const addressesPath = path.join(__dirname, "..", "addresses.json");
+  const addresses = readJsonSafe(addressesPath, null);
+
+  if (!addresses || !Array.isArray(addresses) || addresses.length === 0) {
+    console.error("❌ Error: Could not read a valid array of addresses from addresses.json");
+    console.error("Make sure addresses.json exists in the root folder and looks like: [\"0x123...\", \"0x456...\"]");
     process.exit(1);
   }
 
@@ -64,69 +68,88 @@ function normalizeLeaves(rawLeaves) {
   const rawLeaves = readJsonSafe(leavesPath, []);
   const leafBigints = normalizeLeaves(rawLeaves);
 
-  // Generate secret s (field element)
-  const s =
-    BigInt("0x" + crypto.randomBytes(31).toString("hex")) % SNARK_FIELD;
+  const newPassesData = [];
 
-  const borrowerField = addrToField(borrower);
+  console.log(`Processing ${addresses.length} addresses...`);
 
-  // leaf = Poseidon(s, borrower)
-  const leaf = BigInt(H2(s, borrowerField));
+  // 1. Generate secrets and leaves for all addresses FIRST
+  for (const borrower of addresses) {
+    if (!borrower.startsWith("0x") || borrower.length !== 42) {
+      console.warn(`⚠️ Skipping invalid address format: ${borrower}`);
+      continue;
+    }
 
-  // Append leaf
-  leafBigints.push(leaf);
-  const leafIndex = leafBigints.length - 1; // deterministic insertion index
+    // Generate secret s (field element)
+    const s = BigInt("0x" + crypto.randomBytes(31).toString("hex")) % SNARK_FIELD;
+    const borrowerField = addrToField(borrower);
 
-  // Persist leaves as 0x hex
+    // leaf = Poseidon(s, borrower)
+    const leaf = BigInt(H2(s, borrowerField));
+
+    // Append leaf to the master list
+    leafBigints.push(leaf);
+    const leafIndex = leafBigints.length - 1; // deterministic insertion index
+
+    // Temporarily store the data so we can generate the proofs AFTER the tree is built
+    newPassesData.push({
+      borrower,
+      s,
+      borrowerField,
+      leaf,
+      leafIndex
+    });
+  }
+
+  // 2. Persist all leaves as 0x hex
   fs.writeFileSync(
     leavesPath,
     JSON.stringify(leafBigints.map(toHex32), null, 2)
   );
 
-  // Build Merkle tree
+  // 3. Build the Merkle tree with the complete set of leaves
   const tree = new MerkleTree(DEPTH, leafBigints, {
     hashFunction: (l, r) => H2(BigInt(l), BigInt(r)),
     zeroElement: 0n,
   });
 
   const root = BigInt(tree.root);
+  console.log(`\n🌳 Tree built successfully!`);
+  console.log(`🎯 INITIAL_ROOT (Use this for .env): ${toHex32(root)}\n`);
 
-  /**
-   * CRITICAL FIX:
-   * In your fixed-merkle-tree version, tree.proof(x) expects a LEAF VALUE.
-   * We want an index-based path → use tree.path(index).
-   */
-  const { pathElements, pathIndices } = tree.path(leafIndex);
+  // 4. Generate proofs and write the individual pass files
+  for (const passData of newPassesData) {
+    /**
+     * CRITICAL FIX:
+     * In your fixed-merkle-tree version, tree.proof(x) expects a LEAF VALUE.
+     * We want an index-based path → use tree.path(index).
+     */
+    const { pathElements, pathIndices } = tree.path(passData.leafIndex);
 
-  const pathElementsHex = pathElements.map((x) => toHex32(BigInt(x)));
-  const pathIndicesNum = pathIndices.map((x) => Number(x));
+    const pathElementsHex = pathElements.map((x) => toHex32(BigInt(x)));
+    const pathIndicesNum = pathIndices.map((x) => Number(x));
 
-  // nonce starts at 0 for demo
-  const nonce = 0n;
+    // nonce starts at 0 for demo
+    const nonce = 0n;
 
-  // nullifier = Poseidon(s, scope=1, borrower, nonce)
-  const nullifier = BigInt(H4(s, 1n, borrowerField, nonce));
+    // nullifier = Poseidon(s, scope=1, borrower, nonce)
+    const nullifier = BigInt(H4(passData.s, 1n, passData.borrowerField, nonce));
 
-  const pass = {
-    borrower,
-    secret: toHex32(s),
-    leaf: toHex32(leaf),
-    root: toHex32(root),
-    nullifier: toHex32(nullifier),
-    nonce: nonce.toString(),
-    depth: DEPTH,
-    leafIndex,
-    pathElements: pathElementsHex,
-    pathIndices: pathIndicesNum,
-  };
+    const pass = {
+      borrower: passData.borrower,
+      secret: toHex32(passData.s),
+      leaf: toHex32(passData.leaf),
+      root: toHex32(root),
+      nullifier: toHex32(nullifier),
+      nonce: nonce.toString(),
+      depth: DEPTH,
+      leafIndex: passData.leafIndex,
+      pathElements: pathElementsHex,
+      pathIndices: pathIndicesNum,
+    };
 
-  const passPath = path.join(__dirname, "..", `pass.${borrower}.json`);
-  fs.writeFileSync(passPath, JSON.stringify(pass, null, 2));
+    const passPath = path.join(__dirname, "..", `pass.${passData.borrower}.json`);
+    fs.writeFileSync(passPath, JSON.stringify(pass, null, 2));
 
-  console.log("✅ Issued pass and built tree");
-  console.log("Leaves file:", leavesPath);
-  console.log("Pass file:", passPath);
-  console.log("LeafIndex:", leafIndex);
-  console.log("Root:", pass.root);
-  console.log("Nullifier:", pass.nullifier);
+    console.log(`✅ Issued pass for ${passData.borrower} -> pass.${passData.borrower}.json`);
+  }
 })();

@@ -10,7 +10,7 @@
 NeuroLedger is a next-generation decentralized lending protocol on **Ethereum Sepolia**. 
 Borrowing is intelligently gated by a **zkPass ZK Proof** (for privacy-preserving allowlisting) and dynamically orchestrated by the **Chainlink Runtime Environment (CRE)**, which fuses on-chain solvency checks with **Google Gemini AI** and off-chain market sentiment to make secure, deterministic loan approvals.
 
-[Live Demo](https://neuroledger.com) • [Demo Video](#) • [Chainlink Faucet](https://faucets.chain.link/sepolia)
+[Live Demo](https://www.neuroledgers.com/#/zk-private-lending) • [Demo Video](#) • [Chainlink Faucet](https://faucets.chain.link/sepolia)
 
 </div>
 
