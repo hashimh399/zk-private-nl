@@ -746,12 +746,16 @@ const maxWithdrawable = useMemo(() => {
         <div className="max-w-6xl mx-auto">
           <div className="flex items-center justify-between flex-wrap gap-4 mb-6">
             <div className="space-y-1">
-              <h1 className="text-3xl font-bold">ZK Private Lending</h1>
+              <h1 className="text-3xl font-bold">Privacy Preserving Lending with CRE Orchestration</h1>
               <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
                 <span>NeuroLedger Protocol · Sepolia</span>
                 <span className="inline-flex items-center gap-1 rounded-full bg-muted px-3 py-1 text-xs">
                   <ShieldCheck className="w-3.5 h-3.5" />
                   Verified contracts
+                </span>
+                <span className="inline-flex items-center gap-1 rounded-full bg-muted px-3 py-1 text-xs">
+                  <ShieldCheck className="w-3.5 h-3.5" />
+                  CRE
                 </span>
               </div>
             </div>
