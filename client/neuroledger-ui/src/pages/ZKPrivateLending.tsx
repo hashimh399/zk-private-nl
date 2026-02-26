@@ -361,32 +361,69 @@ export default function ZKPrivateLending() {
   return (collEth * minCollValue) / collVal;
 }, [ethCollateral, tokenDebt, collateralValue]);
 
-const maxWithdrawable = useMemo(() => {
-  if (!ethCollateral) return 0n;
-  const collEth = ethCollateral as bigint;
+// const maxWithdrawable = useMemo(() => {
+//   if (!ethCollateral) return 0n;
+//   const collEth = ethCollateral as bigint;
 
-  if (!tokenDebt || (tokenDebt as bigint) === 0n) return collEth;
+//   if (!tokenDebt || (tokenDebt as bigint) === 0n) return collEth;
 
-  if (collEth <= safeCollateralFloor) return 0n;
-  return collEth - safeCollateralFloor;
-}, [ethCollateral, tokenDebt, safeCollateralFloor]);
+//   if (collEth <= safeCollateralFloor) return 0n;
+//   return collEth - safeCollateralFloor;
+// }, [ethCollateral, tokenDebt, safeCollateralFloor]);
 
 
-  const maxBorrowable = useMemo(() => {
-  if (!collateralValue || !tokenDebt) return 0n;
+//   const maxBorrowable = useMemo(() => {
+//   if (!collateralValue || !tokenDebt) return 0n;
 
-  // matches LendingPool.liquidationThreshold = 85
-  const liquidationThreshold = 85n;
+//   // matches LendingPool.liquidationThreshold = 85
+//   const liquidationThreshold = 85n;
 
-  // maxDebt = collValue * liqThr / 100
-  const maxDebt = (collateralValue as bigint * liquidationThreshold) / 100n;
-  const debt = tokenDebt as bigint;
+//   // maxDebt = collValue * liqThr / 100
+//   const maxDebt = (collateralValue as bigint * liquidationThreshold) / 100n;
+//   const debt = tokenDebt as bigint;
 
-  if (maxDebt <= debt) return 0n;
-  return maxDebt - debt;
-}, [collateralValue, tokenDebt]);
+//   if (maxDebt <= debt) return 0n;
+//   return maxDebt - debt;
+// }, [collateralValue, tokenDebt]);
   
   // CRE simulate command
+ const maxWithdrawable = useMemo(() => {
+    if (!ethCollateral || ethCollateral === 0n) return 0n;
+    const collEth = ethCollateral as bigint;
+
+    // If there is no debt, they can withdraw everything
+    if (!tokenDebt || (tokenDebt as bigint) === 0n) return collEth;
+
+    // Otherwise, calculate how much collateral must stay to keep HF >= 1
+    // Required Collateral Value = (Debt * 100) / LiquidationThreshold
+    const debt = tokenDebt as bigint;
+    const minRequiredValue = (debt * 100n) / 85n;
+    
+    // Convert Value back to ETH amount: (RequiredValue * TotalEth) / TotalValue
+    const currentVal = collateralValue as bigint;
+    if (!currentVal || currentVal === 0n) return 0n;
+    
+    const requiredEth = (minRequiredValue * collEth) / currentVal;
+
+    if (collEth <= requiredEth) return 0n;
+    return collEth - requiredEth;
+  }, [ethCollateral, tokenDebt, collateralValue]);
+  const maxBorrowable = useMemo(() => {
+    // If we don't have collateral value yet, we can't calculate.
+    if (!collateralValue || collateralValue === 0n) return 0n;
+
+    const collVal = collateralValue as bigint;
+    const debt = (tokenDebt as bigint) || 0n;
+
+    // LendingPool uses PCT_BASE = 100.
+    // maxAllowedDebtValue = (collateralValue * liquidationThreshold) / 100
+    const liquidationThreshold = 85n; 
+    const maxAllowedDebt = (collVal * liquidationThreshold) / 100n;
+
+    if (maxAllowedDebt <= debt) return 0n;
+    return maxAllowedDebt - debt;
+  }, [collateralValue, tokenDebt]);
+
   const creCommand = useMemo(() => {
     if (!requestTx) return "";
     return `cre workflow simulate ./zkpass-risk-orchestrator --project-root . --target staging-settings --broadcast --non-interactive --trigger-index 0 --evm-tx-hash ${requestTx} --evm-event-index 0`;
@@ -811,11 +848,16 @@ const maxWithdrawable = useMemo(() => {
                   value={tokenDebt ? Number(formatEther(tokenDebt as bigint)).toFixed(4) : "0"}
                   sub="NL"
                 />
-                <MetricCard
+                {/* <MetricCard
                   label="Max Borrowable"
                   value={Number(formatEther(maxBorrowable)).toFixed(4)}
                    sub="NL"
-                />
+                /> */}
+                <MetricCard
+  label="Max Borrowable"
+  value={maxBorrowable > 0n ? Number(formatEther(maxBorrowable)).toFixed(4) : "0.0000"}
+  sub="NL"
+/>
                 <MetricCard
                   label="Health Factor"
                   value={hfFormatted}
