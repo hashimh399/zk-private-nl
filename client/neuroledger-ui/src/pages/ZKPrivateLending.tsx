@@ -757,6 +757,10 @@ const maxWithdrawable = useMemo(() => {
                   <ShieldCheck className="w-3.5 h-3.5" />
                   CRE
                 </span>
+                <span className="inline-flex items-center gap-1 rounded-full bg-muted px-3 py-1 text-xs">
+                  <ShieldCheck className="w-3.5 h-3.5" />
+                  Zero Knowledge Gated
+                </span>
               </div>
             </div>
             <WalletConnect />
