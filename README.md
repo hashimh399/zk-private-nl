@@ -32,30 +32,27 @@ NeuroLedger is a **policy-aware lending protocol**:
 # 🔗 Chainlink CRE Workflows (REQUIRED LINKS)
 
 ## 1) Borrow Risk Orchestrator (event-driven)
-**Workflow Folder:** `./workflows/zkpass-risk-orchestrator/`
-
-- CRE project config: `./workflows/zkpass-risk-orchestrator/project.yaml`
-- Workflow definition: `./workflows/zkpass-risk-orchestrator/workflow.yaml`
+- CRE project config: [project.yaml](./workflows/project.yaml)
+- Secrets manifest: [secrets.yaml](./workflows/secrets.yaml)
+**Workflow Dir:** [cre-borrow-orchestrator](./workflows/zkpass-risk-orchestrator/)
+- Workflow definition: [workflow.yaml](./workflows/zkpass-risk-orchestrator/workflow.yaml)
 - Workflow code:
-  - Entry: `./workflows/zkpass-risk-orchestrator/index.ts`
-  - Supporting modules (split files): `./workflows/zkpass-risk-orchestrator/*.ts`
+  - Entry: [index.ts](./workflows/zkpass-risk-orchestrator/index.ts)
+  - Supporting modules (split files): [evm.ts,http.ts,decision.ts,prompt.ts,types.ts,utils.ts,report.ts](./workflows/zkpass-risk-orchestrator/)
 - Workflow configs:
-  - `./workflows/zkpass-risk-orchestrator/config.staging.json`
-  - `./workflows/zkpass-risk-orchestrator/config.production.json`
-- Secrets manifest: `./workflows/zkpass-risk-orchestrator/secrets.yaml`
+  - [./workflows/zkpass-risk-orchestrator/config.staging.json](./workflows/zkpass-risk-orchestrator/config.staging.json)
+
 
 ## 2) Liquidation Orchestrator (cron-driven)
-**Workflow Folder:** `./workflows/liquidation-orchestrator/`  
+**Workflow Folder:** [liquidation-orchestrator](./workflows/liquidation-orchestrator/)
 
-- CRE project config: `./workflows/liquidation-orchestrator/project.yaml`
-- Workflow definition: `./workflows/liquidation-orchestrator/workflow.yaml`
+- Workflow definition: [workflow.yaml](./workflows/liquidation-orchestrator/workflow.yaml)
 - Workflow code:
-  - Entry: `./workflows/liquidation-orchestrator/index.ts`
-  - Supporting modules (split files): `./workflows/liquidation-orchestrator/*.ts`
+  - Entry: [index.ts](./workflows/liquidation-orchestrator/index.ts)
+  - Supporting modules (split files): [evm.ts,math.ts,report.ts,discover.ts](./workflows/liquidation-orchestrator/)
 - Workflow configs:
-  - `./workflows/liquidation-orchestrator/config.staging.json`
-  - `./workflows/liquidation-orchestrator/config.production.json`
-- Secrets manifest: `./workflows/liquidation-orchestrator/secrets.yaml`
+  - [./workflows/liquidation-orchestrator/config.staging.json](./workflows/liquidation-orchestrator/config.staging.json)
+
 
 ## Chainlink Consumer Contracts (Receivers)
 - Borrow decision receiver: `./contracts/contracts/CREBorrowDecisionReceiver.sol`
