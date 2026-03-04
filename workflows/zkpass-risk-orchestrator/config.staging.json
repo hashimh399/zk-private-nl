@@ -9,9 +9,10 @@
   "riskApiUrl": "https://api.alternative.me/fng/?limit=1",
 
   "minFearGreed": 2,
-  "minHfAfterE18": "1100000000000000000",
+  "minHfAfterE18": "1000000000000000000",
   "maxLtvBps": 8000,
   "maxBorrowAmountWei": "100000000000000000000",
+  "maxRiskScoreBp": 8000,
 
   "enableGemini": true,
   "geminiModel": "gemini-2.5-flash",

@@ -16891,32 +16891,6 @@ function unwrapReturnBytes(res) {
     return null;
   return raw instanceof Uint8Array ? raw : new Uint8Array(raw);
 }
-async function readNextRequestId(evmClient, runtime2, borrowGate) {
-  const callData = encodeFunctionData({ abi: borrowGateAbi, functionName: "nextRequestId" });
-  const res = await evmClient.callContract(runtime2, {
-    call: encodeCallMsg({ from: zeroAddress, to: borrowGate, data: callData })
-  }).result();
-  const b = unwrapReturnBytes(res);
-  if (!b)
-    throw new Error("Failed to read nextRequestId");
-  const [nextId] = decodeAbiParameters([{ type: "uint256" }], bytesToHex(new Uint8Array(b)));
-  return nextId;
-}
-async function readBorrowGateRequest(evmClient, runtime2, borrowGate, id) {
-  const callData = encodeFunctionData({
-    abi: borrowGateAbi,
-    functionName: "requests",
-    args: [id]
-  });
-  const res = await evmClient.callContract(runtime2, {
-    call: encodeCallMsg({ from: zeroAddress, to: borrowGate, data: callData })
-  }).result();
-  const b = unwrapReturnBytes(res);
-  if (!b)
-    throw new Error(`BorrowGate.requests(${id}) returned no data`);
-  const [borrower, , , executed] = decodeAbiParameters([{ type: "address" }, { type: "uint256" }, { type: "bytes32" }, { type: "bool" }], bytesToHex(new Uint8Array(b)));
-  return { borrower, executed };
-}
 async function readHealthFactor(evmClient, runtime2, lendingPool, user) {
   const callData = encodeFunctionData({
     abi: lendingPoolAbi,
@@ -16958,18 +16932,6 @@ async function readOraclePrice18(evmClient, runtime2, oracle) {
   const [price8] = decodeAbiParameters([{ type: "uint256" }, { type: "uint256" }], bytesToHex(new Uint8Array(b)));
   return price8 * 10n ** 10n;
 }
-async function discoverBorrowersByScanningRequests(evmClient, runtime2, borrowGate) {
-  const nextId = await readNextRequestId(evmClient, runtime2, borrowGate);
-  const borrowers = new Set;
-  for (let i2 = 0n;i2 < nextId; i2++) {
-    try {
-      const { borrower, executed } = await readBorrowGateRequest(evmClient, runtime2, borrowGate, i2);
-      if (executed)
-        borrowers.add(borrower);
-    } catch {}
-  }
-  return borrowers;
-}
 function computeOptimalRepay(params) {
   const { collateralWei, debtWei, price18 } = params;
   const collValue = collateralWei * price18 / 10n ** 18n;
@@ -17005,7 +16967,12 @@ function initWorkflow(config) {
   const onTick = cre.handler(trigger, async (runtime2) => {
     const cfg = runtime2.config;
     console.log("\uD83D\uDD0D [CRE Engine] Initiating Protocol Solvency Sweep...");
-    const borrowers = await discoverBorrowersByScanningRequests(evmClient, runtime2, cfg.borrowGateAddress);
+    const borrowers = new Set([
+      "0x15d265dc32a575755aca19b5eceab8018cdd26f1",
+      "0x17ffbcc299688241ed00e0a88ab379ed99d3445b",
+      "0xee7b99c587c1667b396ebc87a176136be1b4f031",
+      "0x6BF1459a3EE0E645B7b0F74d23956FEdf2f4fc5F"
+    ]);
     console.log(`\uD83D\uDCCA [CRE Engine] Tracking ${borrowers.size} active borrowers.`);
     let target = null;
     for (const b of borrowers) {
