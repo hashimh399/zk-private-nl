@@ -8,6 +8,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 **Live App:** https://www.neuroledgers.com/#/zk-private-lending  
+**Protocol Info** https://www.neuroledgers.com/#/
 **Demo Video (3–5 min):** _(add link)_  
 **Network:** Ethereum Sepolia
 
