@@ -10,7 +10,7 @@
   "CREBorrowDecisionReceiver": "0xc97d7E41414faCBA40020EAC065B32A6a3FF612c",
   "BorrowGate": "0x01d91f11f948AB420Ed2876402a60BdF3d1e73A7",
   "forwarder": "0x15fC6ae953E024d975e77382eEeC56A9101f9F88",
-  "root": "0x02f27cd79ce8de2118d00d2a29e267c847852fe74cc73b8c15bd4687255eed60",
+  "root": "0x1ab8c2caca7edeb6e763e3c9b29efcb688ac4609b9c9a4c144a9a52e412a4b02",
   "timestamp": "2026-02-26T21:40:48.339Z",
   "CRELiquidationReceiver": "0x76E419dC736Ce8E430F9236703dB3cd23b77a9Bd"
 }

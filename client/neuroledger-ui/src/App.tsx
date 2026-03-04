@@ -9,6 +9,7 @@ import Index from "./pages/Index";
 import ZKPrivateLending from "./pages/ZKPrivateLending";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
+import Footer from "./components/Footer";
 
 const queryClient = new QueryClient();
 
@@ -25,6 +26,7 @@ const App = () => (
             <Route path="/admin" element={<Admin />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
+          <Footer/>
         </HashRouter>
       </TooltipProvider>
     </QueryClientProvider>

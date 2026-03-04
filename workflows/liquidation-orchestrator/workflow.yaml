@@ -2,6 +2,6 @@ staging-settings:
   user-workflow:
     workflow-name: "liquidation-orchestrator"
   workflow-artifacts:
-    workflow-path: "./main.ts"
+    workflow-path: "./index.ts"
     config-path: "./config.staging.json"
     secrets-path: "../secrets.yaml"

@@ -775,6 +775,14 @@ export default function ZKPrivateLending() {
     return Math.min(decision.ltvBps / 100, 100);
   }, [decision]);
 
+  function formatTokenAmount(amount: string | bigint) {
+  try {
+    return formatEther(BigInt(amount));
+  } catch {
+    return amount;
+  }
+}
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -948,7 +956,7 @@ export default function ZKPrivateLending() {
                           <TerminalSquare className="w-5 h-5 text-muted-foreground" />
                         )}
                         <div className="text-left">
-                          <p className="text-sm font-semibold">Generate proof (Server)</p>
+                          <p className="text-sm font-semibold">Generate proof (client)</p>
                           <p className="text-xs text-muted-foreground">
                             Optional, for smoother UX
                           </p>
@@ -958,7 +966,12 @@ export default function ZKPrivateLending() {
 
                     {proof && (
                       <div className="mt-3 bg-muted rounded-lg p-3 text-xs font-mono space-y-1">
-                        <p>Amount: {proof.amount}</p>
+                        <p>
+  Borrow Amount: {formatTokenAmount(proof.amount)} NL
+  <span className="text-muted-foreground ml-2">
+    ({proof.amount})
+  </span>
+</p>
                         <p className="flex items-center gap-1">
                           Nullifier: {shortHex(proof.nullifier)} <CopyButton text={proof.nullifier} />
                         </p>
@@ -967,9 +980,7 @@ export default function ZKPrivateLending() {
                       </div>
                     )}
 
-                    <p className="text-xs text-muted-foreground mt-2">
-                      Manual upload is the recommended hackathon demo path. Server proving is optional.
-                    </p>
+          
                   </StepCard>
 
                   <StepCard step={2} current={step} label="C" title="Request Borrow" alwaysEnabled>

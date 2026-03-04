@@ -6462,6 +6462,7 @@ var ListSchema = /* @__PURE__ */ messageDesc(file_values_v1_values, 3);
 var DecimalSchema = /* @__PURE__ */ messageDesc(file_values_v1_values, 4);
 var file_sdk_v1alpha_sdk = /* @__PURE__ */ fileDesc("ChVzZGsvdjFhbHBoYS9zZGsucHJvdG8SC3Nkay52MWFscGhhIrQBChVTaW1wbGVDb25zZW5zdXNJbnB1dHMSIQoFdmFsdWUYASABKAsyEC52YWx1ZXMudjEuVmFsdWVIABIPCgVlcnJvchgCIAEoCUgAEjUKC2Rlc2NyaXB0b3JzGAMgASgLMiAuc2RrLnYxYWxwaGEuQ29uc2Vuc3VzRGVzY3JpcHRvchIhCgdkZWZhdWx0GAQgASgLMhAudmFsdWVzLnYxLlZhbHVlQg0KC29ic2VydmF0aW9uIpABCglGaWVsZHNNYXASMgoGZmllbGRzGAEgAygLMiIuc2RrLnYxYWxwaGEuRmllbGRzTWFwLkZpZWxkc0VudHJ5Gk8KC0ZpZWxkc0VudHJ5EgsKA2tleRgBIAEoCRIvCgV2YWx1ZRgCIAEoCzIgLnNkay52MWFscGhhLkNvbnNlbnN1c0Rlc2NyaXB0b3I6AjgBIoYBChNDb25zZW5zdXNEZXNjcmlwdG9yEjMKC2FnZ3JlZ2F0aW9uGAEgASgOMhwuc2RrLnYxYWxwaGEuQWdncmVnYXRpb25UeXBlSAASLAoKZmllbGRzX21hcBgCIAEoCzIWLnNkay52MWFscGhhLkZpZWxkc01hcEgAQgwKCmRlc2NyaXB0b3IiagoNUmVwb3J0UmVxdWVzdBIXCg9lbmNvZGVkX3BheWxvYWQYASABKAwSFAoMZW5jb2Rlcl9uYW1lGAIgASgJEhQKDHNpZ25pbmdfYWxnbxgDIAEoCRIUCgxoYXNoaW5nX2FsZ28YBCABKAkilwEKDlJlcG9ydFJlc3BvbnNlEhUKDWNvbmZpZ19kaWdlc3QYASABKAwSEgoGc2VxX25yGAIgASgEQgIwABIWCg5yZXBvcnRfY29udGV4dBgDIAEoDBISCgpyYXdfcmVwb3J0GAQgASgMEi4KBHNpZ3MYBSADKAsyIC5zZGsudjFhbHBoYS5BdHRyaWJ1dGVkU2lnbmF0dXJlIjsKE0F0dHJpYnV0ZWRTaWduYXR1cmUSEQoJc2lnbmF0dXJlGAEgASgMEhEKCXNpZ25lcl9pZBgCIAEoDSJrChFDYXBhYmlsaXR5UmVxdWVzdBIKCgJpZBgBIAEoCRIlCgdwYXlsb2FkGAIgASgLMhQuZ29vZ2xlLnByb3RvYnVmLkFueRIOCgZtZXRob2QYAyABKAkSEwoLY2FsbGJhY2tfaWQYBCABKAUiWgoSQ2FwYWJpbGl0eVJlc3BvbnNlEicKB3BheWxvYWQYASABKAsyFC5nb29nbGUucHJvdG9idWYuQW55SAASDwoFZXJyb3IYAiABKAlIAEIKCghyZXNwb25zZSJYChNUcmlnZ2VyU3Vic2NyaXB0aW9uEgoKAmlkGAEgASgJEiUKB3BheWxvYWQYAiABKAsyFC5nb29nbGUucHJvdG9idWYuQW55Eg4KBm1ldGhvZBgDIAEoCSJVChpUcmlnZ2VyU3Vic2NyaXB0aW9uUmVxdWVzdBI3Cg1zdWJzY3JpcHRpb25zGAEgAygLMiAuc2RrLnYxYWxwaGEuVHJpZ2dlclN1YnNjcmlwdGlvbiJACgdUcmlnZ2VyEg4KAmlkGAEgASgEQgIwABIlCgdwYXlsb2FkGAIgASgLMhQuZ29vZ2xlLnByb3RvYnVmLkFueSInChhBd2FpdENhcGFiaWxpdGllc1JlcXVlc3QSCwoDaWRzGAEgAygFIrgBChlBd2FpdENhcGFiaWxpdGllc1Jlc3BvbnNlEkgKCXJlc3BvbnNlcxgBIAMoCzI1LnNkay52MWFscGhhLkF3YWl0Q2FwYWJpbGl0aWVzUmVzcG9uc2UuUmVzcG9uc2VzRW50cnkaUQoOUmVzcG9uc2VzRW50cnkSCwoDa2V5GAEgASgFEi4KBXZhbHVlGAIgASgLMh8uc2RrLnYxYWxwaGEuQ2FwYWJpbGl0eVJlc3BvbnNlOgI4ASKgAQoORXhlY3V0ZVJlcXVlc3QSDgoGY29uZmlnGAEgASgMEisKCXN1YnNjcmliZRgCIAEoCzIWLmdvb2dsZS5wcm90b2J1Zi5FbXB0eUgAEicKB3RyaWdnZXIYAyABKAsyFC5zZGsudjFhbHBoYS5UcmlnZ2VySAASHQoRbWF4X3Jlc3BvbnNlX3NpemUYBCABKARCAjAAQgkKB3JlcXVlc3QimQEKD0V4ZWN1dGlvblJlc3VsdBIhCgV2YWx1ZRgBIAEoCzIQLnZhbHVlcy52MS5WYWx1ZUgAEg8KBWVycm9yGAIgASgJSAASSAoVdHJpZ2dlcl9zdWJzY3JpcHRpb25zGAMgASgLMicuc2RrLnYxYWxwaGEuVHJpZ2dlclN1YnNjcmlwdGlvblJlcXVlc3RIAEIICgZyZXN1bHQiVgoRR2V0U2VjcmV0c1JlcXVlc3QSLAoIcmVxdWVzdHMYASADKAsyGi5zZGsudjFhbHBoYS5TZWNyZXRSZXF1ZXN0EhMKC2NhbGxiYWNrX2lkGAIgASgFIiIKE0F3YWl0U2VjcmV0c1JlcXVlc3QSCwoDaWRzGAEgAygFIqsBChRBd2FpdFNlY3JldHNSZXNwb25zZRJDCglyZXNwb25zZXMYASADKAsyMC5zZGsudjFhbHBoYS5Bd2FpdFNlY3JldHNSZXNwb25zZS5SZXNwb25zZXNFbnRyeRpOCg5SZXNwb25zZXNFbnRyeRILCgNrZXkYASABKAUSKwoFdmFsdWUYAiABKAsyHC5zZGsudjFhbHBoYS5TZWNyZXRSZXNwb25zZXM6AjgBIi4KDVNlY3JldFJlcXVlc3QSCgoCaWQYASABKAkSEQoJbmFtZXNwYWNlGAIgASgJIkUKBlNlY3JldBIKCgJpZBgBIAEoCRIRCgluYW1lc3BhY2UYAiABKAkSDQoFb3duZXIYAyABKAkSDQoFdmFsdWUYBCABKAkiSgoLU2VjcmV0RXJyb3ISCgoCaWQYASABKAkSEQoJbmFtZXNwYWNlGAIgASgJEg0KBW93bmVyGAMgASgJEg0KBWVycm9yGAQgASgJIm4KDlNlY3JldFJlc3BvbnNlEiUKBnNlY3JldBgBIAEoCzITLnNkay52MWFscGhhLlNlY3JldEgAEikKBWVycm9yGAIgASgLMhguc2RrLnYxYWxwaGEuU2VjcmV0RXJyb3JIAEIKCghyZXNwb25zZSJBCg9TZWNyZXRSZXNwb25zZXMSLgoJcmVzcG9uc2VzGAEgAygLMhsuc2RrLnYxYWxwaGEuU2VjcmV0UmVzcG9uc2UquAEKD0FnZ3JlZ2F0aW9uVHlwZRIgChxBR0dSRUdBVElPTl9UWVBFX1VOU1BFQ0lGSUVEEAASGwoXQUdHUkVHQVRJT05fVFlQRV9NRURJQU4QARIeChpBR0dSRUdBVElPTl9UWVBFX0lERU5USUNBTBACEiIKHkFHR1JFR0FUSU9OX1RZUEVfQ09NTU9OX1BSRUZJWBADEiIKHkFHR1JFR0FUSU9OX1RZUEVfQ09NTU9OX1NVRkZJWBAEKjkKBE1vZGUSFAoQTU9ERV9VTlNQRUNJRklFRBAAEgwKCE1PREVfRE9OEAESDQoJTU9ERV9OT0RFEAJCaAoPY29tLnNkay52MWFscGhhQghTZGtQcm90b1ABogIDU1hYqgILU2RrLlYxYWxwaGHKAgtTZGtcVjFhbHBoYeICF1Nka1xWMWFscGhhXEdQQk1ldGFkYXRh6gIMU2RrOjpWMWFscGhhYgZwcm90bzM", [file_google_protobuf_any, file_google_protobuf_empty, file_values_v1_values]);
 var SimpleConsensusInputsSchema = /* @__PURE__ */ messageDesc(file_sdk_v1alpha_sdk, 0);
+var FieldsMapSchema = /* @__PURE__ */ messageDesc(file_sdk_v1alpha_sdk, 1);
 var ConsensusDescriptorSchema = /* @__PURE__ */ messageDesc(file_sdk_v1alpha_sdk, 2);
 var ReportRequestSchema = /* @__PURE__ */ messageDesc(file_sdk_v1alpha_sdk, 3);
 var ReportResponseSchema = /* @__PURE__ */ messageDesc(file_sdk_v1alpha_sdk, 4);
@@ -8347,6 +8348,38 @@ var encodeCallMsg = (payload) => ({
   to: hexToBase64(payload.to),
   data: hexToBase64(payload.data)
 });
+var decodeJson = (input) => {
+  const decoder = new TextDecoder("utf-8");
+  const textBody = decoder.decode(input);
+  return JSON.parse(textBody);
+};
+function text(responseOrFn) {
+  if (typeof responseOrFn === "function") {
+    return {
+      result: () => text(responseOrFn().result)
+    };
+  } else {
+    const decoder = new TextDecoder("utf-8");
+    return decoder.decode(responseOrFn.body).trim();
+  }
+}
+function json(responseOrFn) {
+  if (typeof responseOrFn === "function") {
+    return {
+      result: () => json(responseOrFn().result)
+    };
+  }
+  return decodeJson(responseOrFn.body);
+}
+function ok(responseOrFn) {
+  if (typeof responseOrFn === "function") {
+    return {
+      result: () => ok(responseOrFn().result)
+    };
+  } else {
+    return responseOrFn.statusCode >= 200 && responseOrFn.statusCode < 300;
+  }
+}
 function sendReport(runtime, report, fn) {
   const rawReport = report.x_generatedCodeOnly_unwrap();
   const request = fn(rawReport);
@@ -12003,6 +12036,36 @@ function simpleDescriptor(agg) {
     }
   });
 }
+function median() {
+  return new ConsensusFieldAggregation(simpleDescriptor(AggregationType.MEDIAN));
+}
+
+class ConsensusFieldAggregation {
+  fieldDescriptor;
+  t;
+  u;
+  constructor(fieldDescriptor, t, u) {
+    this.fieldDescriptor = fieldDescriptor;
+    this.t = t;
+    this.u = u;
+  }
+}
+function ConsensusAggregationByFields(aggregation) {
+  const fieldMap = create(FieldsMapSchema);
+  Object.keys(aggregation).forEach((key) => {
+    const fieldFn = aggregation[key];
+    const fieldAggregation = fieldFn();
+    if (fieldAggregation.fieldDescriptor) {
+      fieldMap.fields[key] = fieldAggregation.fieldDescriptor;
+    }
+  });
+  return new ConsensusImpl(create(ConsensusDescriptorSchema, {
+    descriptor: {
+      case: "fieldsMap",
+      value: fieldMap
+    }
+  }));
+}
 
 class Int64 {
   static INT64_MIN = -(2n ** 63n);
@@ -12617,8 +12680,8 @@ var ZodIssueCode = util.arrayToEnum([
   "not_finite"
 ]);
 var quotelessJson = (obj) => {
-  const json = JSON.stringify(obj, null, 2);
-  return json.replace(/"([^"]+)":/g, "$1:");
+  const json2 = JSON.stringify(obj, null, 2);
+  return json2.replace(/"([^"]+)":/g, "$1:");
 };
 
 class ZodError extends Error {
@@ -16908,19 +16971,6 @@ init_encodeAbiParameters();
 init_encodeFunctionData();
 init_toBytes();
 init_keccak256();
-init_exports2();
-var BorrowGateAbi = parseAbi([
-  "function requests(uint256) view returns (address borrower,uint256 amount,bytes32 nullifier,bool executed)"
-]);
-var BorrowApprovalRegistryAbi = parseAbi([
-  "function isDecided(bytes32) view returns (bool)"
-]);
-var LendingPoolAbi = parseAbi([
-  "function collateralValueOf(address) view returns (uint256)",
-  "function tokenDebt(address) view returns (uint256)",
-  "function liquidationThreshold() view returns (uint256)",
-  "function HealthFactor(address) view returns (uint256)"
-]);
 var HF_ONE = 10n ** 18n;
 var PCT_BASE = 100n;
 function clampUint16(x) {
@@ -16929,6 +16979,10 @@ function clampUint16(x) {
   if (x > 65535n)
     return 65535;
   return Number(x);
+}
+function safeSnippet(s, max = 180) {
+  const oneLine = s.replace(/\s+/g, " ").trim();
+  return oneLine.length <= max ? oneLine : oneLine.slice(0, max) + "…";
 }
 function bytesToBase64(bytes) {
   const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
@@ -16948,50 +17002,47 @@ function bytesToBase64(bytes) {
   }
   return out;
 }
-function getRespBodyBytes(resp) {
-  const b = resp?.body;
-  if (!b)
-    return new Uint8Array;
-  if (b instanceof Uint8Array)
-    return b;
-  if (Array.isArray(b))
-    return new Uint8Array(b);
-  if (ArrayBuffer.isView(b) && b.buffer)
-    return new Uint8Array(b.buffer, b.byteOffset, b.byteLength);
-  return new Uint8Array;
-}
-function parseJsonBody(resp) {
-  const bodyBytes = getRespBodyBytes(resp);
-  const text = new TextDecoder().decode(bodyBytes);
-  return JSON.parse(text);
-}
-function getReturnBytes(res, label) {
-  const raw = res?.data ?? res?.returnData ?? res?.result?.data ?? res?.result?.returnData;
-  if (!raw) {
-    throw new Error(`${label}: callContract returned no data/returnData`);
-  }
-  if (raw instanceof Uint8Array)
-    return raw;
-  if (ArrayBuffer.isView(raw) && raw.buffer)
-    return new Uint8Array(raw.buffer, raw.byteOffset, raw.byteLength);
-  if (Array.isArray(raw))
-    return new Uint8Array(raw);
-  throw new Error(`${label}: unsupported return bytes type`);
-}
-function extractJson(text) {
-  const s = text.indexOf("{");
-  const e = text.lastIndexOf("}");
-  if (s === -1 || e === -1 || e <= s)
+function extractFirstJsonObject(text2) {
+  const cleaned = text2.replace(/```json/gi, "").replace(/```/g, "").trim();
+  const start = cleaned.indexOf("{");
+  if (start === -1)
     return null;
+  let depth = 0;
+  for (let i2 = start;i2 < cleaned.length; i2++) {
+    const ch = cleaned[i2];
+    if (ch === "{")
+      depth++;
+    else if (ch === "}")
+      depth--;
+    if (depth === 0) {
+      const candidate = cleaned.slice(start, i2 + 1);
+      try {
+        return JSON.parse(candidate);
+      } catch {
+        return null;
+      }
+    }
+  }
+  return null;
+}
+function fetchFearGreed(send, url) {
+  const resp = send.sendRequest({
+    url,
+    method: "GET",
+    timeout: "7s",
+    headers: { Accept: "application/json" }
+  }).result();
+  if (!ok(resp))
+    return -1;
   try {
-    return JSON.parse(text.slice(s, e + 1));
+    const body = json(resp);
+    const v = Number(body?.data?.[0]?.value ?? -1);
+    if (!Number.isFinite(v) || v < 0 || v > 100)
+      return -1;
+    return Math.trunc(v);
   } catch {
-    return null;
+    return -1;
   }
-}
-function safeSnippet(s, max = 180) {
-  const oneLine = s.replace(/\s+/g, " ").trim();
-  return oneLine.length <= max ? oneLine : oneLine.slice(0, max) + "…";
 }
 function fetchGeminiRiskScoreWithDebug(send, apiKey, model, prompt) {
   const modelPath = model.startsWith("models/") ? model : `models/${model}`;
@@ -17000,8 +17051,7 @@ function fetchGeminiRiskScoreWithDebug(send, apiKey, model, prompt) {
     contents: [{ role: "user", parts: [{ text: prompt }] }],
     generationConfig: {
       temperature: 0,
-      maxOutputTokens: 256,
-      responseMimeType: "application/json"
+      maxOutputTokens: 512
     }
   };
   const bodyBytes = new TextEncoder().encode(JSON.stringify(payload));
@@ -17012,41 +17062,184 @@ function fetchGeminiRiskScoreWithDebug(send, apiKey, model, prompt) {
     headers: { "Content-Type": "application/json" },
     body: bytesToBase64(bodyBytes)
   }).result();
-  let score = 0;
-  let snippet = "";
+  const status = resp.statusCode ?? 0;
   try {
-    if (resp.statusCode === 200) {
-      const body = parseJsonBody(resp);
-      const text = body?.candidates?.[0]?.content?.parts?.[0]?.text;
-      if (typeof text === "string") {
-        snippet = safeSnippet(text, 180);
-        const parsed = extractJson(text);
-        const s = Number(parsed?.riskScoreBp ?? 0);
-        if (Number.isFinite(s) && s >= 0 && s <= 1e4)
-          score = Math.trunc(s);
-      }
+    const raw = text(resp);
+    console.log(`\uD83E\uDDE0 [Gemini node] status=${status}`);
+    console.log(`\uD83E\uDDE0 [Gemini node] rawBody="${safeSnippet(raw, 800)}"`);
+    if (!ok(resp)) {
+      return { score: 0, status };
     }
-  } catch {}
-  return { score, status: resp.statusCode ?? 0, snippet };
-}
-function fetchFearGreed(send, url) {
-  const resp = send.sendRequest({
-    url,
-    method: "GET",
-    timeout: "7s",
-    headers: { Accept: "application/json" }
-  }).result();
-  if (resp.statusCode !== 200)
-    return -1;
-  try {
-    const body = parseJsonBody(resp);
-    const v = Number(body?.data?.[0]?.value ?? -1);
-    if (!Number.isFinite(v) || v < 0 || v > 100)
-      return -1;
-    return Math.trunc(v);
-  } catch {
-    return -1;
+    const body = json(resp);
+    const parts = body?.candidates?.[0]?.content?.parts;
+    const modelText = Array.isArray(parts) ? parts.map((p) => typeof p?.text === "string" ? p.text : "").join("") : "";
+    console.log(`\uD83E\uDDE0 [Gemini node] modelText="${safeSnippet(modelText, 800)}"`);
+    const parsed = extractFirstJsonObject(modelText);
+    const s = Number(parsed?.riskScoreBp ?? 0);
+    if (Number.isFinite(s) && s >= 0 && s <= 1e4) {
+      return { score: Math.trunc(s), status };
+    }
+    return { score: 0, status };
+  } catch (e) {
+    console.log(`\uD83E\uDDE0 [Gemini node] parseError=${String(e?.message ?? e)}`);
+    return { score: 0, status };
   }
+}
+function buildGeminiPrompt(params) {
+  return [
+    "You are a deterministic risk scoring function.",
+    "Return STRICT JSON only.",
+    "No markdown, no code fences, no prose, no keys outside schema.",
+    "Output must be a single JSON object and nothing else.",
+    "",
+    "Schema:",
+    '{ "riskScoreBp": number }',
+    "",
+    "Inputs:",
+    `fearGreed=${params.fearGreed}`,
+    `hfNowE18=${params.hfNowE18.toString()}`,
+    `hfAfterE18=${params.hfAfterE18.toString()}`,
+    `ltvBpsAfter=${params.ltvBpsAfter}`,
+    `borrowAmountWei=${params.borrowAmountWei.toString()}`,
+    "",
+    "Rules:",
+    "- riskScoreBp must be an integer in [0,10000].",
+    "- Higher score = higher risk."
+  ].join(`
+`);
+}
+function decideBorrow(params) {
+  let approved = true;
+  let reasonCode = 0;
+  if (params.fearGreed < 0) {
+    approved = false;
+    reasonCode = 5;
+  } else if (params.fearGreed < params.minFearGreed) {
+    approved = false;
+    reasonCode = 1;
+  } else if (params.hfAfter < params.minHfAfter) {
+    approved = false;
+    reasonCode = 2;
+  } else if (BigInt(params.ltvBps) > BigInt(params.maxLtvBps)) {
+    approved = false;
+    reasonCode = 3;
+  } else if (params.reqAmount > params.maxBorrowAmount) {
+    approved = false;
+    reasonCode = 4;
+  }
+  return { approved, reasonCode };
+}
+init_exports2();
+var BorrowGateAbi = parseAbi([
+  "function requests(uint256) view returns (address borrower,uint256 amount,bytes32 nullifier,bool executed)"
+]);
+var BorrowApprovalRegistryAbi = parseAbi([
+  "function isDecided(bytes32) view returns (bool)"
+]);
+var LendingPoolAbi = parseAbi([
+  "function collateralValueOf(address) view returns (uint256)",
+  "function tokenDebt(address) view returns (uint256)",
+  "function liquidationThreshold() view returns (uint256)",
+  "function HealthFactor(address) view returns (uint256)"
+]);
+function getBorrowRequestedTopic0() {
+  const sig = "BorrowRequested(uint256,address,bytes32,uint256)";
+  return keccak256(toBytes(sig));
+}
+function getReturnBytes(res, label) {
+  const raw = res?.data ?? res?.returnData ?? res?.result?.data ?? res?.result?.returnData;
+  if (!raw)
+    throw new Error(`${label}: callContract returned no data/returnData`);
+  if (raw instanceof Uint8Array)
+    return raw;
+  if (ArrayBuffer.isView(raw) && raw.buffer)
+    return new Uint8Array(raw.buffer, raw.byteOffset, raw.byteLength);
+  if (Array.isArray(raw))
+    return new Uint8Array(raw);
+  throw new Error(`${label}: unsupported return bytes type`);
+}
+function decodeBorrowRequested(log) {
+  const requestId = BigInt(bytesToHex(log.topics[1]));
+  const borrowerTopicHex = bytesToHex(log.topics[2]);
+  const borrower = "0x" + borrowerTopicHex.slice(-40);
+  const nullifier = bytesToHex(log.topics[3]);
+  return { requestId, borrower, nullifier };
+}
+function buildLogTrigger(evmClient, borrowGate) {
+  const topic0 = getBorrowRequestedTopic0();
+  return evmClient.logTrigger({
+    addresses: [hexToBase64(borrowGate)],
+    topics: [{ values: [hexToBase64(topic0)] }]
+  });
+}
+function readBorrowGateRequest(evmClient, runtime2, borrowGate, requestId) {
+  const call = encodeFunctionData({
+    abi: BorrowGateAbi,
+    functionName: "requests",
+    args: [requestId]
+  });
+  const res = evmClient.callContract(runtime2, {
+    call: encodeCallMsg({ from: zeroAddress, to: borrowGate, data: call })
+  }).result();
+  const bytes = getReturnBytes(res, "BorrowGate.requests");
+  const [b, amt, n, executed] = decodeAbiParameters([{ type: "address" }, { type: "uint256" }, { type: "bytes32" }, { type: "bool" }], bytesToHex(bytes));
+  return { borrower: b, amount: amt, nullifier: n, executed };
+}
+function isDecided(evmClient, runtime2, registry2, nullifier) {
+  const call = encodeFunctionData({
+    abi: BorrowApprovalRegistryAbi,
+    functionName: "isDecided",
+    args: [nullifier]
+  });
+  const res = evmClient.callContract(runtime2, {
+    call: encodeCallMsg({ from: zeroAddress, to: registry2, data: call })
+  }).result();
+  const [v] = decodeAbiParameters([{ type: "bool" }], bytesToHex(getReturnBytes(res, "Registry.isDecided")));
+  return v;
+}
+function readPoolContext(evmClient, runtime2, lendingPool, borrower) {
+  const collValueCall = encodeFunctionData({ abi: LendingPoolAbi, functionName: "collateralValueOf", args: [borrower] });
+  const debtCall = encodeFunctionData({ abi: LendingPoolAbi, functionName: "tokenDebt", args: [borrower] });
+  const liqThrCall = encodeFunctionData({ abi: LendingPoolAbi, functionName: "liquidationThreshold", args: [] });
+  const hfNowCall = encodeFunctionData({ abi: LendingPoolAbi, functionName: "HealthFactor", args: [borrower] });
+  const collRes = evmClient.callContract(runtime2, { call: encodeCallMsg({ from: zeroAddress, to: lendingPool, data: collValueCall }) }).result();
+  const [collValue] = decodeAbiParameters([{ type: "uint256" }], bytesToHex(getReturnBytes(collRes, "Pool.collateralValueOf")));
+  const debtRes = evmClient.callContract(runtime2, { call: encodeCallMsg({ from: zeroAddress, to: lendingPool, data: debtCall }) }).result();
+  const [debt] = decodeAbiParameters([{ type: "uint256" }], bytesToHex(getReturnBytes(debtRes, "Pool.tokenDebt")));
+  const liqRes = evmClient.callContract(runtime2, { call: encodeCallMsg({ from: zeroAddress, to: lendingPool, data: liqThrCall }) }).result();
+  const [liqThr] = decodeAbiParameters([{ type: "uint256" }], bytesToHex(getReturnBytes(liqRes, "Pool.liquidationThreshold")));
+  const hfRes = evmClient.callContract(runtime2, { call: encodeCallMsg({ from: zeroAddress, to: lendingPool, data: hfNowCall }) }).result();
+  const [hfNow] = decodeAbiParameters([{ type: "uint256" }], bytesToHex(getReturnBytes(hfRes, "Pool.HealthFactor")));
+  return { collValue, debt, liqThr, hfNow };
+}
+function encodeDecisionPayload(params) {
+  return encodeAbiParameters([
+    { type: "bytes32" },
+    { type: "bool" },
+    { type: "uint8" },
+    { type: "uint16" },
+    { type: "uint16" }
+  ], [
+    params.nullifier,
+    params.approved,
+    params.reasonCode,
+    clampUint16(BigInt(params.riskScoreBp)),
+    clampUint16(BigInt(params.ltvBps))
+  ]);
+}
+async function writeDecisionReport(evmClient, runtime2, payload) {
+  const cfg = runtime2.config;
+  const report2 = runtime2.report({
+    encodedPayload: hexToBase64(payload),
+    encoderName: "evm",
+    signingAlgo: "ecdsa",
+    hashingAlgo: "keccak256"
+  }).result();
+  evmClient.writeReport(runtime2, {
+    receiver: cfg.receiverAddress,
+    report: report2,
+    gasConfig: { gasLimit: cfg.gasLimit }
+  }).result();
 }
 function initWorkflow(config) {
   const network248 = getNetwork({
@@ -17058,100 +17251,49 @@ function initWorkflow(config) {
     throw new Error(`Network not found: ${config.chainSelectorName}`);
   const evmClient = new cre.capabilities.EVMClient(network248.chainSelector.selector);
   const httpClient = new cre.capabilities.HTTPClient;
-  const BORROW_REQUESTED_SIG = "BorrowRequested(uint256,address,bytes32,uint256)";
-  const topic0 = keccak256(toBytes(BORROW_REQUESTED_SIG));
-  const trigger = evmClient.logTrigger({
-    addresses: [hexToBase64(config.borrowGateAddress)],
-    topics: [{ values: [hexToBase64(topic0)] }]
-  });
+  const trigger = buildLogTrigger(evmClient, config.borrowGateAddress);
   const onLog = handler(trigger, (runtime2, log) => {
     const cfg = runtime2.config;
-    const requestId = BigInt(bytesToHex(log.topics[1]));
-    const borrowerTopicHex = bytesToHex(log.topics[2]);
-    const borrower = "0x" + borrowerTopicHex.slice(-40);
-    const nullifier = bytesToHex(log.topics[3]);
-    const reqCall = encodeFunctionData({
-      abi: BorrowGateAbi,
-      functionName: "requests",
-      args: [requestId]
-    });
-    const reqRes = evmClient.callContract(runtime2, {
-      call: encodeCallMsg({
-        from: zeroAddress,
-        to: cfg.borrowGateAddress,
-        data: reqCall
-      })
-    }).result();
-    const reqBytes = getReturnBytes(reqRes, "BorrowGate.requests");
-    const [reqBorrower, reqAmount, reqNullifier, executed] = decodeAbiParameters([
-      { type: "address" },
-      { type: "uint256" },
-      { type: "bytes32" },
-      { type: "bool" }
-    ], bytesToHex(reqBytes));
-    if (executed || reqBorrower.toLowerCase() !== borrower.toLowerCase() || reqNullifier.toLowerCase() !== nullifier.toLowerCase()) {
+    const { requestId, borrower, nullifier } = decodeBorrowRequested(log);
+    console.log("\uD83E\uDDFE [RiskOrchestrator] BorrowRequested received");
+    console.log(`   requestId=${requestId.toString()}`);
+    console.log(`   borrower=${borrower}`);
+    console.log(`   nullifier=${nullifier}`);
+    const req = readBorrowGateRequest(evmClient, runtime2, cfg.borrowGateAddress, requestId);
+    console.log("\uD83D\uDD0E [RiskOrchestrator] BorrowGate.requests()");
+    console.log(`   executed=${req.executed}`);
+    console.log(`   reqBorrower=${req.borrower}`);
+    console.log(`   reqAmountWei=${req.amount.toString()}`);
+    console.log(`   reqNullifier=${req.nullifier}`);
+    if (req.executed || req.borrower.toLowerCase() !== borrower.toLowerCase() || req.nullifier.toLowerCase() !== nullifier.toLowerCase()) {
+      console.log("⏭️ [RiskOrchestrator] Skipping: invalid/stale request");
       return "Request invalid/stale; skipping";
     }
-    const decidedCall = encodeFunctionData({
-      abi: BorrowApprovalRegistryAbi,
-      functionName: "isDecided",
-      args: [nullifier]
-    });
-    const decidedRes = evmClient.callContract(runtime2, {
-      call: encodeCallMsg({
-        from: zeroAddress,
-        to: cfg.registryAddress,
-        data: decidedCall
-      })
-    }).result();
-    const [alreadyDecided] = decodeAbiParameters([{ type: "bool" }], bytesToHex(getReturnBytes(decidedRes, "Registry.isDecided")));
+    const alreadyDecided = isDecided(evmClient, runtime2, cfg.registryAddress, nullifier);
+    console.log(`\uD83E\uDDF7 [RiskOrchestrator] Registry.isDecided=${alreadyDecided}`);
     if (alreadyDecided) {
+      console.log("⏭️ [RiskOrchestrator] Skipping: already decided");
       return "Already decided; skipping";
     }
-    let collValue = null;
-    let debt = null;
-    let liqThr = null;
-    let hfNow = null;
+    let collValue, debt, liqThr, hfNow;
     try {
-      const collValueCall = encodeFunctionData({
-        abi: LendingPoolAbi,
-        functionName: "collateralValueOf",
-        args: [borrower]
-      });
-      const debtCall = encodeFunctionData({
-        abi: LendingPoolAbi,
-        functionName: "tokenDebt",
-        args: [borrower]
-      });
-      const liqThrCall = encodeFunctionData({
-        abi: LendingPoolAbi,
-        functionName: "liquidationThreshold",
-        args: []
-      });
-      const hfNowCall = encodeFunctionData({
-        abi: LendingPoolAbi,
-        functionName: "HealthFactor",
-        args: [borrower]
-      });
-      const collRes = evmClient.callContract(runtime2, { call: encodeCallMsg({ from: zeroAddress, to: cfg.lendingPoolAddress, data: collValueCall }) }).result();
-      [collValue] = decodeAbiParameters([{ type: "uint256" }], bytesToHex(getReturnBytes(collRes, "Pool.collateralValueOf")));
-      const debtRes = evmClient.callContract(runtime2, { call: encodeCallMsg({ from: zeroAddress, to: cfg.lendingPoolAddress, data: debtCall }) }).result();
-      [debt] = decodeAbiParameters([{ type: "uint256" }], bytesToHex(getReturnBytes(debtRes, "Pool.tokenDebt")));
-      const liqRes = evmClient.callContract(runtime2, { call: encodeCallMsg({ from: zeroAddress, to: cfg.lendingPoolAddress, data: liqThrCall }) }).result();
-      [liqThr] = decodeAbiParameters([{ type: "uint256" }], bytesToHex(getReturnBytes(liqRes, "Pool.liquidationThreshold")));
-      const hfRes = evmClient.callContract(runtime2, { call: encodeCallMsg({ from: zeroAddress, to: cfg.lendingPoolAddress, data: hfNowCall }) }).result();
-      [hfNow] = decodeAbiParameters([{ type: "uint256" }], bytesToHex(getReturnBytes(hfRes, "Pool.HealthFactor")));
+      ({ collValue, debt, liqThr, hfNow } = readPoolContext(evmClient, runtime2, cfg.lendingPoolAddress, borrower));
+      console.log("\uD83C\uDFE6 [RiskOrchestrator] Pool context");
+      console.log(`   collateralValue=${collValue.toString()}`);
+      console.log(`   debt=${debt.toString()}`);
+      console.log(`   liquidationThreshold=${liqThr.toString()}`);
+      console.log(`   hfNowE18=${hfNow.toString()}`);
     } catch (e) {
-      const approved2 = false;
-      const reasonCode2 = 6;
+      console.log("❌ [RiskOrchestrator] Pool/oracle read failed; writing reject reason=6");
+      console.log(`   error=${String(e?.message ?? e)}`);
       const payload2 = encodeAbiParameters([
         { type: "bytes32" },
         { type: "bool" },
         { type: "uint8" },
         { type: "uint16" },
         { type: "uint16" }
-      ], [nullifier, approved2, reasonCode2, 0, 65535]);
-      const report3 = runtime2.report({
+      ], [nullifier, false, 6, 0, 65535]);
+      const report2 = runtime2.report({
         encodedPayload: hexToBase64(payload2),
         encoderName: "evm",
         signingAlgo: "ecdsa",
@@ -17159,84 +17301,72 @@ function initWorkflow(config) {
       }).result();
       evmClient.writeReport(runtime2, {
         receiver: cfg.receiverAddress,
-        report: report3,
+        report: report2,
         gasConfig: { gasLimit: cfg.gasLimit }
       }).result();
       return `REJECT reason=6 (pool/oracle read failed: ${String(e?.message ?? e)})`;
     }
-    const debtAfter = debt + reqAmount;
+    const debtAfter = debt + req.amount;
     const hfAfter = debtAfter === 0n ? 2n ** 256n - 1n : collValue * liqThr * HF_ONE / (debtAfter * PCT_BASE);
     const ltvBpsBig = collValue === 0n ? 65535n : debtAfter * 10000n / collValue;
     const ltvBps = clampUint16(ltvBpsBig);
+    console.log("\uD83E\uDDEE [RiskOrchestrator] Derived metrics");
+    console.log(`   debtAfter=${debtAfter.toString()}`);
+    console.log(`   hfAfterE18=${hfAfter.toString()}`);
+    console.log(`   ltvBps=${ltvBps}`);
     const fearGreed = httpClient.sendRequest(runtime2, fetchFearGreed, consensusMedianAggregation())(cfg.riskApiUrl).result();
+    console.log(`\uD83D\uDCC9 [RiskOrchestrator] fearGreed=${fearGreed} (min=${cfg.minFearGreed})`);
     let riskScoreBp = 0;
-    let geminiStatus = 0;
+    let geminiStatus = -1;
     let geminiSnippet = "";
+    console.log(`\uD83E\uDDE0 [RiskOrchestrator] Gemini enabled=${cfg.enableGemini}`);
     if (cfg.enableGemini) {
-      const apiKey = runtime2.getSecret({ id: "GEMINI_API_KEY" }).result().value;
-      const prompt = [
-        "You are a deterministic risk scoring function.",
-        "Return ONLY JSON.",
-        "",
-        "Schema:",
-        '{ "riskScoreBp": number }',
-        "",
-        "Inputs:",
-        `fearGreed=${fearGreed}`,
-        `hfNowE18=${hfNow.toString()}`,
-        `hfAfterE18=${hfAfter.toString()}`,
-        `ltvBpsAfter=${ltvBps}`,
-        `borrowAmountWei=${reqAmount.toString()}`,
-        "",
-        "Rules:",
-        "- riskScoreBp must be an integer in [0,10000].",
-        "- Higher score = higher risk."
-      ].join(`
-`);
-      const g = httpClient.sendRequest(runtime2, fetchGeminiRiskScoreWithDebug, consensusMedianAggregation())(apiKey, cfg.geminiModel, prompt).result();
+      const secret = runtime2.getSecret({ id: "GEMINI_API_KEY" }).result();
+      const apiKey = secret?.value ?? "";
+      console.log(`\uD83E\uDDE0 [RiskOrchestrator] Gemini apiKeyPresent=${apiKey.length > 0}`);
+      console.log(`\uD83E\uDDE0 [RiskOrchestrator] Gemini model=${cfg.geminiModel}`);
+      const prompt = buildGeminiPrompt({
+        fearGreed,
+        hfNowE18: hfNow,
+        hfAfterE18: hfAfter,
+        ltvBpsAfter: ltvBps,
+        borrowAmountWei: req.amount
+      });
+      console.log("\uD83E\uDDE0 [RiskOrchestrator] Gemini request -> sending");
+      const g = httpClient.sendRequest(runtime2, fetchGeminiRiskScoreWithDebug, ConsensusAggregationByFields({
+        score: median,
+        status: median
+      }))(apiKey, cfg.geminiModel, prompt).result();
       riskScoreBp = g.score;
       geminiStatus = g.status;
-      geminiSnippet = g.snippet;
+      console.log("\uD83E\uDDE0 [RiskOrchestrator] Gemini response <- aggregated");
+      console.log(`   status=${geminiStatus}`);
+      console.log(`   riskScoreBp=${riskScoreBp}`);
+    } else {
+      console.log("\uD83E\uDDE0 [RiskOrchestrator] Gemini skipped (enableGemini=false)");
     }
-    const minHfAfter = BigInt(cfg.minHfAfterE18);
-    const maxBorrowAmount = BigInt(cfg.maxBorrowAmountWei);
-    let approved = true;
-    let reasonCode = 0;
-    if (fearGreed < 0) {
-      approved = false;
-      reasonCode = 5;
-    } else if (fearGreed < cfg.minFearGreed) {
-      approved = false;
-      reasonCode = 1;
-    } else if (hfAfter < minHfAfter) {
-      approved = false;
-      reasonCode = 2;
-    } else if (BigInt(ltvBps) > BigInt(cfg.maxLtvBps)) {
-      approved = false;
-      reasonCode = 3;
-    } else if (reqAmount > maxBorrowAmount) {
-      approved = false;
-      reasonCode = 4;
-    }
-    const payload = encodeAbiParameters([
-      { type: "bytes32" },
-      { type: "bool" },
-      { type: "uint8" },
-      { type: "uint16" },
-      { type: "uint16" }
-    ], [nullifier, approved, reasonCode, clampUint16(BigInt(riskScoreBp)), ltvBps]);
-    const report2 = runtime2.report({
-      encodedPayload: hexToBase64(payload),
-      encoderName: "evm",
-      signingAlgo: "ecdsa",
-      hashingAlgo: "keccak256"
-    }).result();
-    evmClient.writeReport(runtime2, {
-      receiver: cfg.receiverAddress,
-      report: report2,
-      gasConfig: { gasLimit: cfg.gasLimit }
-    }).result();
-    return `Decision=${approved ? "APPROVE" : "REJECT"} reason=${reasonCode} fearGreed=${fearGreed} ltvBps=${ltvBps} riskScoreBp=${riskScoreBp} geminiStatus=${geminiStatus} gemini="${geminiSnippet}"`;
+    const decision = decideBorrow({
+      fearGreed,
+      minFearGreed: cfg.minFearGreed,
+      hfAfter,
+      minHfAfter: BigInt(cfg.minHfAfterE18),
+      ltvBps,
+      maxLtvBps: cfg.maxLtvBps,
+      reqAmount: req.amount,
+      maxBorrowAmount: BigInt(cfg.maxBorrowAmountWei)
+    });
+    console.log("✅ [RiskOrchestrator] Decision");
+    console.log(`   approved=${decision.approved}`);
+    console.log(`   reasonCode=${decision.reasonCode}`);
+    const payload = encodeDecisionPayload({
+      nullifier,
+      approved: decision.approved,
+      reasonCode: decision.reasonCode,
+      riskScoreBp,
+      ltvBps
+    });
+    writeDecisionReport(evmClient, runtime2, payload);
+    return `Decision=${decision.approved ? "APPROVE" : "REJECT"} reason=${decision.reasonCode} fearGreed=${fearGreed} ltvBps=${ltvBps} riskScoreBp=${riskScoreBp} geminiStatus=${geminiStatus} geminiRiskScoreBp="${geminiSnippet}"`;
   });
   return [onLog];
 }

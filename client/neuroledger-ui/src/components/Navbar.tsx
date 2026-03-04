@@ -7,7 +7,7 @@ const Navbar = () => {
   const links = [
     { to: "/", label: "Protocol Info" },
     { to: "/zk-private-lending", label: "Live Demo" },
-    { to: "/admin", label: "Admin" },
+    
   ];
 
   return (

@@ -20,6 +20,7 @@ type Config = {
   borrowGateAddress: Address;
   lendingPoolAddress: Address;
   receiverAddress: Address;
+  oracle: Address;
   gasLimit: string;
 }
 
@@ -156,10 +157,9 @@ function initWorkflow(config: Config) {
       const accRes = await evmClient.callContract(runtime, { call: encodeCallMsg({ from: zeroAddress, to: cfg.lendingPoolAddress, data: accCall }) }).result();
       const [collateral, debt] = decodeAbiParameters([{ type: "uint256" }, { type: "uint256" }], bytesToHex(new Uint8Array(accRes.data as any))) as [bigint, bigint];
 
-      // B. Fetch Oracle Price (Assuming MockOracle is deployed at a known address, or you can pass it in config)
-      // Note: Replace config.oracleAddress with your actual Oracle address in your config
+     
       const oracleCall = encodeFunctionData({ abi: oracleAbi, functionName: "getLatestPrice" });
-      const oracleRes = await evmClient.callContract(runtime, { call: encodeCallMsg({ from: zeroAddress, to: "0x09432E9196B9ec5076a965C527A817e6cC675FCD", data: oracleCall }) }).result();
+      const oracleRes = await evmClient.callContract(runtime, { call: encodeCallMsg({ from: zeroAddress, to: cfg.oracle, data: oracleCall }) }).result();
       const [price8] = decodeAbiParameters([{ type: "uint256" }, { type: "uint256" }], bytesToHex(new Uint8Array(oracleRes.data as any))) as [bigint, bigint];
       const price18 = price8 * 10n**10n; // Scale to 18 decimals
 

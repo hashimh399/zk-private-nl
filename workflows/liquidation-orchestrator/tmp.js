@@ -16866,14 +16866,18 @@ var sendErrorResponse = (error) => {
   }
   hostBindings.sendResponse(payload);
 };
+var HF_ONE = 10n ** 18n;
 init_exports();
 var zeroAddress = "0x0000000000000000000000000000000000000000";
 init_decodeAbiParameters();
 init_encodeAbiParameters();
 init_encodeFunctionData();
-var HF_ONE = 10n ** 18n;
-var getAccountAbi = parseAbi(["function getAccountInfo(address) view returns (uint256 collateral, uint256 debt)"]);
-var oracleAbi = parseAbi(["function getLatestPrice() view returns (uint256 price, uint256 updatedAt)"]);
+var getAccountAbi = parseAbi([
+  "function getAccountInfo(address) view returns (uint256 collateral, uint256 debt)"
+]);
+var oracleAbi = parseAbi([
+  "function getLatestPrice() view returns (uint256 price, uint256 updatedAt)"
+]);
 var borrowGateAbi = parseAbi([
   "function nextRequestId() view returns (uint256)",
   "function requests(uint256) view returns (address borrower, uint256 amount, bytes32 nullifier, bool executed)"
@@ -16881,6 +16885,119 @@ var borrowGateAbi = parseAbi([
 var lendingPoolAbi = parseAbi([
   "function HealthFactor(address user) view returns (uint256)"
 ]);
+function unwrapReturnBytes(res) {
+  const raw = res?.data ?? res?.returnData;
+  if (!raw)
+    return null;
+  return raw instanceof Uint8Array ? raw : new Uint8Array(raw);
+}
+async function readNextRequestId(evmClient, runtime2, borrowGate) {
+  const callData = encodeFunctionData({ abi: borrowGateAbi, functionName: "nextRequestId" });
+  const res = await evmClient.callContract(runtime2, {
+    call: encodeCallMsg({ from: zeroAddress, to: borrowGate, data: callData })
+  }).result();
+  const b = unwrapReturnBytes(res);
+  if (!b)
+    throw new Error("Failed to read nextRequestId");
+  const [nextId] = decodeAbiParameters([{ type: "uint256" }], bytesToHex(new Uint8Array(b)));
+  return nextId;
+}
+async function readBorrowGateRequest(evmClient, runtime2, borrowGate, id) {
+  const callData = encodeFunctionData({
+    abi: borrowGateAbi,
+    functionName: "requests",
+    args: [id]
+  });
+  const res = await evmClient.callContract(runtime2, {
+    call: encodeCallMsg({ from: zeroAddress, to: borrowGate, data: callData })
+  }).result();
+  const b = unwrapReturnBytes(res);
+  if (!b)
+    throw new Error(`BorrowGate.requests(${id}) returned no data`);
+  const [borrower, , , executed] = decodeAbiParameters([{ type: "address" }, { type: "uint256" }, { type: "bytes32" }, { type: "bool" }], bytesToHex(new Uint8Array(b)));
+  return { borrower, executed };
+}
+async function readHealthFactor(evmClient, runtime2, lendingPool, user) {
+  const callData = encodeFunctionData({
+    abi: lendingPoolAbi,
+    functionName: "HealthFactor",
+    args: [user]
+  });
+  const res = await evmClient.callContract(runtime2, {
+    call: encodeCallMsg({ from: zeroAddress, to: lendingPool, data: callData })
+  }).result();
+  const b = unwrapReturnBytes(res);
+  if (!b)
+    throw new Error("HealthFactor returned no data");
+  const [hf] = decodeAbiParameters([{ type: "uint256" }], bytesToHex(new Uint8Array(b)));
+  return hf;
+}
+async function readAccountInfo(evmClient, runtime2, lendingPool, user) {
+  const callData = encodeFunctionData({
+    abi: getAccountAbi,
+    functionName: "getAccountInfo",
+    args: [user]
+  });
+  const res = await evmClient.callContract(runtime2, {
+    call: encodeCallMsg({ from: zeroAddress, to: lendingPool, data: callData })
+  }).result();
+  const b = unwrapReturnBytes(res);
+  if (!b)
+    throw new Error("getAccountInfo returned no data");
+  const [collateral, debt] = decodeAbiParameters([{ type: "uint256" }, { type: "uint256" }], bytesToHex(new Uint8Array(b)));
+  return { collateral, debt };
+}
+async function readOraclePrice18(evmClient, runtime2, oracle) {
+  const callData = encodeFunctionData({ abi: oracleAbi, functionName: "getLatestPrice" });
+  const res = await evmClient.callContract(runtime2, {
+    call: encodeCallMsg({ from: zeroAddress, to: oracle, data: callData })
+  }).result();
+  const b = unwrapReturnBytes(res);
+  if (!b)
+    throw new Error("oracle.getLatestPrice returned no data");
+  const [price8] = decodeAbiParameters([{ type: "uint256" }, { type: "uint256" }], bytesToHex(new Uint8Array(b)));
+  return price8 * 10n ** 10n;
+}
+async function discoverBorrowersByScanningRequests(evmClient, runtime2, borrowGate) {
+  const nextId = await readNextRequestId(evmClient, runtime2, borrowGate);
+  const borrowers = new Set;
+  for (let i2 = 0n;i2 < nextId; i2++) {
+    try {
+      const { borrower, executed } = await readBorrowGateRequest(evmClient, runtime2, borrowGate, i2);
+      if (executed)
+        borrowers.add(borrower);
+    } catch {}
+  }
+  return borrowers;
+}
+function computeOptimalRepay(params) {
+  const { collateralWei, debtWei, price18 } = params;
+  const collValue = collateralWei * price18 / 10n ** 18n;
+  const numerator = 10200n * debtWei - 8500n * collValue;
+  let repay = 0n;
+  if (numerator > 0n)
+    repay = numerator / 1275n;
+  if (repay > debtWei)
+    repay = debtWei;
+  return repay;
+}
+function encodeLiquidationPayload(target, repay) {
+  return encodeAbiParameters([{ type: "address" }, { type: "uint256" }], [target, repay]);
+}
+async function writeLiquidationReport(evmClient, runtime2, payloadHex) {
+  const cfg = runtime2.config;
+  const report2 = await runtime2.report({
+    encodedPayload: hexToBase64(payloadHex),
+    encoderName: "evm",
+    signingAlgo: "ecdsa",
+    hashingAlgo: "keccak256"
+  }).result();
+  await evmClient.writeReport(runtime2, {
+    receiver: cfg.receiverAddress,
+    report: report2,
+    gasConfig: { gasLimit: cfg.gasLimit }
+  }).result();
+}
 function initWorkflow(config) {
   const evmClient = new cre.capabilities.EVMClient(16015286601757825753n);
   const cron = new cre.capabilities.CronCapability;
@@ -16888,91 +17005,27 @@ function initWorkflow(config) {
   const onTick = cre.handler(trigger, async (runtime2) => {
     const cfg = runtime2.config;
     console.log("\uD83D\uDD0D [CRE Engine] Initiating Protocol Solvency Sweep...");
-    const nextIdCall = encodeFunctionData({
-      abi: borrowGateAbi,
-      functionName: "nextRequestId"
-    });
-    const nextIdRes = await evmClient.callContract(runtime2, {
-      call: encodeCallMsg({ from: zeroAddress, to: cfg.borrowGateAddress, data: nextIdCall })
-    }).result();
-    const rawNextId = nextIdRes?.data ?? nextIdRes?.returnData;
-    if (!rawNextId)
-      return "Failed to read nextRequestId";
-    const [nextId] = decodeAbiParameters([{ type: "uint256" }], bytesToHex(new Uint8Array(rawNextId)));
-    const uniqueBorrowers = new Set;
-    for (let i2 = 0n;i2 < nextId; i2++) {
-      const reqCall = encodeFunctionData({
-        abi: borrowGateAbi,
-        functionName: "requests",
-        args: [i2]
-      });
-      const reqRes = await evmClient.callContract(runtime2, {
-        call: encodeCallMsg({ from: zeroAddress, to: cfg.borrowGateAddress, data: reqCall })
-      }).result();
-      const rawReq = reqRes?.data ?? reqRes?.returnData;
-      if (!rawReq)
-        continue;
-      const [reqBorrower, , , executed] = decodeAbiParameters([{ type: "address" }, { type: "uint256" }, { type: "bytes32" }, { type: "bool" }], bytesToHex(new Uint8Array(rawReq)));
-      if (executed) {
-        uniqueBorrowers.add(reqBorrower);
-      }
-    }
-    console.log(`\uD83D\uDCCA [CRE Engine] Tracking ${uniqueBorrowers.size} active borrowers.`);
-    let targetToLiquidate = null;
-    for (const borrower of uniqueBorrowers) {
-      const hfCall = encodeFunctionData({
-        abi: lendingPoolAbi,
-        functionName: "HealthFactor",
-        args: [borrower]
-      });
-      const hfRes = await evmClient.callContract(runtime2, {
-        call: encodeCallMsg({ from: zeroAddress, to: cfg.lendingPoolAddress, data: hfCall })
-      }).result();
-      const rawHf = hfRes?.data ?? hfRes?.returnData;
-      if (!rawHf)
-        continue;
-      const [hf] = decodeAbiParameters([{ type: "uint256" }], bytesToHex(new Uint8Array(rawHf)));
-      const hfDecimal = Number(hf) / 1000000000000000000;
-      console.log(`   ├─ Borrower: ${borrower.slice(0, 8)}... HF: ${hfDecimal.toFixed(4)}`);
+    const borrowers = await discoverBorrowersByScanningRequests(evmClient, runtime2, cfg.borrowGateAddress);
+    console.log(`\uD83D\uDCCA [CRE Engine] Tracking ${borrowers.size} active borrowers.`);
+    let target = null;
+    for (const b of borrowers) {
+      const hf = await readHealthFactor(evmClient, runtime2, cfg.lendingPoolAddress, b);
+      console.log(`   ├─ Borrower: ${b.slice(0, 8)}... HF: ${(Number(hf) / 1000000000000000000).toFixed(4)}`);
       if (hf < HF_ONE) {
-        targetToLiquidate = borrower;
+        target = b;
         break;
       }
     }
-    if (targetToLiquidate) {
-      console.log(`\uD83D\uDEA8 [CRE ENGINE] DANGER DETECTED: ${targetToLiquidate}`);
-      const accCall = encodeFunctionData({ abi: getAccountAbi, functionName: "getAccountInfo", args: [targetToLiquidate] });
-      const accRes = await evmClient.callContract(runtime2, { call: encodeCallMsg({ from: zeroAddress, to: cfg.lendingPoolAddress, data: accCall }) }).result();
-      const [collateral, debt] = decodeAbiParameters([{ type: "uint256" }, { type: "uint256" }], bytesToHex(new Uint8Array(accRes.data)));
-      const oracleCall = encodeFunctionData({ abi: oracleAbi, functionName: "getLatestPrice" });
-      const oracleRes = await evmClient.callContract(runtime2, { call: encodeCallMsg({ from: zeroAddress, to: "0x09432E9196B9ec5076a965C527A817e6cC675FCD", data: oracleCall }) }).result();
-      const [price8] = decodeAbiParameters([{ type: "uint256" }, { type: "uint256" }], bytesToHex(new Uint8Array(oracleRes.data)));
-      const price18 = price8 * 10n ** 10n;
-      const collValue = collateral * price18 / 10n ** 18n;
-      let optimalRepay = 0n;
-      const numerator = 10200n * debt - 8500n * collValue;
-      if (numerator > 0n) {
-        optimalRepay = numerator / 1275n;
-      }
-      if (optimalRepay > debt) {
-        optimalRepay = debt;
-      }
-      console.log(`   ├─ Computed Optimal Repay: ${Number(optimalRepay) / 1000000000000000000} NL`);
-      const payload = encodeAbiParameters([{ type: "address" }, { type: "uint256" }], [targetToLiquidate, optimalRepay]);
-      const report2 = await runtime2.report({
-        encodedPayload: Buffer.from(payload.replace("0x", ""), "hex").toString("base64"),
-        encoderName: "evm",
-        signingAlgo: "ecdsa",
-        hashingAlgo: "keccak256"
-      }).result();
-      await evmClient.writeReport(runtime2, {
-        receiver: cfg.receiverAddress,
-        report: report2,
-        gasConfig: { gasLimit: cfg.gasLimit }
-      }).result();
-      return `LIQUIDATED: ${targetToLiquidate} for ${optimalRepay}`;
-    }
-    return `All ${uniqueBorrowers.size} borrowers are solvent.`;
+    if (!target)
+      return `All ${borrowers.size} borrowers are solvent.`;
+    console.log(`\uD83D\uDEA8 [CRE ENGINE] DANGER DETECTED: ${target}`);
+    const { collateral, debt } = await readAccountInfo(evmClient, runtime2, cfg.lendingPoolAddress, target);
+    const price18 = await readOraclePrice18(evmClient, runtime2, cfg.oracle);
+    const repay = computeOptimalRepay({ collateralWei: collateral, debtWei: debt, price18 });
+    console.log(`   ├─ Computed Optimal Repay: ${Number(repay) / 1000000000000000000} NL`);
+    const payload = encodeLiquidationPayload(target, repay);
+    await writeLiquidationReport(evmClient, runtime2, payload);
+    return `LIQUIDATED: ${target} for ${repay}`;
   });
   return [onTick];
 }
