@@ -16971,7 +16971,8 @@ function initWorkflow(config) {
       "0x15d265dc32a575755aca19b5eceab8018cdd26f1",
       "0x17ffbcc299688241ed00e0a88ab379ed99d3445b",
       "0xee7b99c587c1667b396ebc87a176136be1b4f031",
-      "0x6BF1459a3EE0E645B7b0F74d23956FEdf2f4fc5F"
+      "0x6BF1459a3EE0E645B7b0F74d23956FEdf2f4fc5F",
+      "0xe83c449Af4Cd5B2585e41475749C2a00c4135F90"
     ]);
     console.log(`\uD83D\uDCCA [CRE Engine] Tracking ${borrowers.size} active borrowers.`);
     let target = null;

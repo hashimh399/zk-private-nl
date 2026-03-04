@@ -69,7 +69,7 @@ NeuroLedger is a **policy-aware lending protocol**:
 
 ## 🔁 Borrow Flow (diagram + summary)
 
-![Borrow Flow](./client/neuroledger-ui/public/borrowflow.svg)
+![Borrow Flow](borrowflow.svg)
 
 **Steps:**
 1) User generates/uploads ZK proof with: `amount, root, nullifier, nonce` + `a,b,c`
