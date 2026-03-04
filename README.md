@@ -3,7 +3,7 @@
 # NeuroLedger
 ### ZK Private-Pass Gated Lending + Chainlink CRE Risk Orchestration + CRE Liquidation Keeper
 
-[![Hackathon](https://img.shields.io/badge/Chainlink-Convergence_Block_Magic-blue.svg)](https://chain.link/hackathon)
+[![Hackathon](https://img.shields.io/badge/Chainlink-Convergence.svg)](https://chain.link/hackathon)
 [![Network](https://img.shields.io/badge/Network-Ethereum_Sepolia-lightgrey.svg)](https://sepolia.etherscan.io/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
