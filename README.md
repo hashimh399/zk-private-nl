@@ -1,6 +1,6 @@
 <div align="center">
 
-![](./client/neuroledger-ui/public/nl.webp) NeuroLedger
+# NeuroLedger
 ### ZK Private-Pass Gated Lending + Chainlink CRE Risk Orchestration + CRE Liquidation Keeper
 
 [![Hackathon](https://img.shields.io/badge/Chainlink-Convergence_Block_Magic-blue.svg)](https://chain.link/hackathon)
@@ -45,17 +45,17 @@ NeuroLedger is a **policy-aware lending protocol**:
 - Secrets manifest: `./workflows/zkpass-risk-orchestrator/secrets.yaml`
 
 ## 2) Liquidation Orchestrator (cron-driven)
-**Workflow Folder:** `./workflows/zkpass-liquidation-orchestrator/`  _(rename if your folder differs)_
+**Workflow Folder:** `./workflows/liquidation-orchestrator/`  
 
-- CRE project config: `./workflows/zkpass-liquidation-orchestrator/project.yaml`
-- Workflow definition: `./workflows/zkpass-liquidation-orchestrator/workflow.yaml`
+- CRE project config: `./workflows/liquidation-orchestrator/project.yaml`
+- Workflow definition: `./workflows/liquidation-orchestrator/workflow.yaml`
 - Workflow code:
-  - Entry: `./workflows/zkpass-liquidation-orchestrator/index.ts`
-  - Supporting modules (split files): `./workflows/zkpass-liquidation-orchestrator/*.ts`
+  - Entry: `./workflows/liquidation-orchestrator/index.ts`
+  - Supporting modules (split files): `./workflows/liquidation-orchestrator/*.ts`
 - Workflow configs:
-  - `./workflows/zkpass-liquidation-orchestrator/config.staging.json`
-  - `./workflows/zkpass-liquidation-orchestrator/config.production.json`
-- Secrets manifest: `./workflows/zkpass-liquidation-orchestrator/secrets.yaml`
+  - `./workflows/liquidation-orchestrator/config.staging.json`
+  - `./workflows/liquidation-orchestrator/config.production.json`
+- Secrets manifest: `./workflows/liquidation-orchestrator/secrets.yaml`
 
 ## Chainlink Consumer Contracts (Receivers)
 - Borrow decision receiver: `./contracts/contracts/CREBorrowDecisionReceiver.sol`
