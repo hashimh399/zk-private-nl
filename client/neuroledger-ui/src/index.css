@@ -1,0 +1,142 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+@layer base {
+  :root {
+    --background: 250 25% 6%;
+    --foreground: 240 10% 93%;
+
+    --card: 250 22% 9%;
+    --card-foreground: 240 10% 93%;
+
+    --popover: 250 22% 9%;
+    --popover-foreground: 240 10% 93%;
+
+    --primary: 270 70% 60%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 250 18% 15%;
+    --secondary-foreground: 240 10% 80%;
+
+    --muted: 250 16% 13%;
+    --muted-foreground: 240 8% 55%;
+
+    --accent: 270 40% 22%;
+    --accent-foreground: 270 60% 78%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 240 10% 93%;
+
+    --success: 142 71% 45%;
+    --success-foreground: 250 25% 6%;
+
+    --warning: 38 92% 50%;
+    --warning-foreground: 250 25% 6%;
+
+    --border: 250 15% 18%;
+    --input: 250 15% 18%;
+    --ring: 270 70% 60%;
+
+    --radius: 0.5rem;
+
+    --silver: 240 8% 75%;
+    --silver-bright: 240 10% 88%;
+
+    --sidebar-background: 250 22% 9%;
+    --sidebar-foreground: 240 10% 80%;
+    --sidebar-primary: 270 70% 60%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 250 18% 15%;
+    --sidebar-accent-foreground: 240 10% 80%;
+    --sidebar-border: 250 15% 18%;
+    --sidebar-ring: 270 70% 60%;
+
+    --gradient-primary: linear-gradient(135deg, hsl(270 70% 60%), hsl(290 60% 65%));
+    --gradient-silver: linear-gradient(135deg, hsl(240 8% 75%), hsl(240 10% 88%));
+    --gradient-card: linear-gradient(145deg, hsl(250 22% 10%), hsl(250 22% 8%));
+    --gradient-hero: radial-gradient(ellipse 80% 60% at 50% 0%, hsl(270 50% 15% / 0.5) 0%, hsl(250 25% 6%) 70%);
+    --shadow-glow: 0 0 40px -5px hsl(270 70% 60% / 0.2);
+    --shadow-card: 0 4px 24px -4px hsl(0 0% 0% / 0.4);
+  }
+
+  .dark {
+    --background: 250 25% 6%;
+    --foreground: 240 10% 93%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display;
+  }
+}
+
+@layer utilities {
+  .text-gradient {
+    @apply bg-clip-text text-transparent;
+    background-image: var(--gradient-primary);
+  }
+
+  .border-glow {
+    @apply border border-primary/20;
+    box-shadow: var(--shadow-glow);
+  }
+
+  .card-elevated {
+    background: var(--gradient-card);
+    box-shadow: var(--shadow-card);
+    @apply border border-border rounded-lg;
+  }
+
+  .font-mono-code {
+    @apply font-mono text-sm tracking-tight;
+  }
+
+  .metric-value {
+    @apply text-2xl font-bold font-mono tracking-tight;
+  }
+
+  .chip {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border border-primary/30 text-accent-foreground bg-accent/20;
+  }
+
+  .section-heading {
+    @apply text-2xl font-bold tracking-tight;
+  }
+
+  .glow-line {
+    @apply h-px w-full;
+    background: linear-gradient(90deg, transparent, hsl(var(--primary) / 0.4), hsl(var(--silver) / 0.2), transparent);
+  }
+
+  .text-silver {
+    color: hsl(var(--silver-bright));
+  }
+
+  .shimmer {
+    background: linear-gradient(
+      110deg,
+      transparent 25%,
+      hsl(var(--silver-bright) / 0.06) 37%,
+      transparent 50%
+    );
+    background-size: 250% 100%;
+    animation: shimmer 4s ease-in-out infinite;
+  }
+
+  @keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+}

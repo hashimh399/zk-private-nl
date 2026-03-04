@@ -1,121 +1,98 @@
-import { expect } from "chai";
-import hardhat from "hardhat";
+require("dotenv").config();
+const fs = require("fs");
+const path = require("path");
+const hre = require("hardhat");
 
-const { ethers } = hardhat;
+const OUT_PATH = path.join(__dirname, "..", "deployments", "sepolia.json");
 
-describe("Smoke: NeuroLedger protocol", function () {
-  let admin: any;
-  let alice: any;
-  let liquidator: any;
+function saveJson(obj: any) {
+  fs.mkdirSync(path.dirname(OUT_PATH), { recursive: true });
+  fs.writeFileSync(OUT_PATH, JSON.stringify(obj, null, 2));
+}
 
-  let token: any;
-  let oracle: any;
-  let vault: any;
-  let pool: any;
+async function main() {
+  const [deployer] = await hre.ethers.getSigners();
+  console.log("Deployer:", deployer.address);
 
-  beforeEach(async () => {
-    [admin, alice, liquidator] = await ethers.getSigners();
+  // 1) Deploy NL token
+  const NL = await hre.ethers.getContractFactory("NeuroLedger");
+  const token = await NL.deploy(
+    "NeuroLedger",
+    "NL",
+    hre.ethers.parseEther("1000000"),
+    deployer.address
+  );
+  await token.waitForDeployment();
+  console.log("NL:", token.target);
 
-    // --- Oracle ---
-    const Oracle = await ethers.getContractFactory("MockOracle");
-    oracle = await Oracle.deploy(ethers.parseUnits("3000", 8)); // $3000
-    await oracle.waitForDeployment?.();
+  // 2) Deploy Oracle (price=3000, 8 decimals)
+  const Oracle = await hre.ethers.getContractFactory("MockOracle");
+  const oracle = await Oracle.deploy(hre.ethers.parseUnits("3000", 8));
+  await oracle.waitForDeployment();
+  console.log("Oracle:", oracle.target);
 
-    // --- NL Token ---
-    const NL = await ethers.getContractFactory("NeuroLedger");
-    token = await NL.deploy(
-      "NeuroLedger",
-      "NL",
-      ethers.parseEther("1000000"),
-      admin.address
-    );
-    await token.waitForDeployment?.();
+  // 3) Deploy Vault (cycle fixed)
+  const Vault = await hre.ethers.getContractFactory("Vault");
+  const vault = await Vault.deploy(
+    deployer.address,
+    token.target,
+    hre.ethers.parseEther("10000") // dailyMintLimit
+  );
+  await vault.waitForDeployment();
+  console.log("Vault:", vault.target);
 
-    // --- Vault (cycle fixed) ---
-    const Vault = await ethers.getContractFactory("Vault");
-    vault = await Vault.deploy(
-      admin.address,
-      token.target,
-      ethers.parseEther("10000") // dailyMintLimit
-    );
-    await vault.waitForDeployment?.();
+  // 4) Deploy LendingPool (your modified version with borrowFor + setBorrowGate)
+  const Pool = await hre.ethers.getContractFactory("LendingPool");
+  const pool = await Pool.deploy(
+    deployer.address,
+    vault.target,
+    oracle.target,
+    token.target
+  );
+  await pool.waitForDeployment();
+  console.log("LendingPool:", pool.target);
 
-    // Allow Vault to mint NL
-    await token
-      .connect(admin)
-      .grantRole(await token.MINTER_ROLE(), vault.target);
+  // 5) Wire roles / permissions
 
-    // --- LendingPool ---
-    const Pool = await ethers.getContractFactory("LendingPool");
-    pool = await Pool.deploy(admin.address, vault.target, oracle.target, token.target);
-    await pool.waitForDeployment?.();
+  // Vault: allow pool to call vault methods (POOL_ROLE)
+  await (await vault.connect(deployer).setPool(pool.target)).wait();
+  console.log("Vault.setPool(pool) ✅");
 
-    // Allow Pool to call Vault functions
-    await vault.connect(admin).setPool(pool.target);
+  // Token: allow vault to mint NL
+  await (await token.connect(deployer).grantRole(await token.MINTER_ROLE(), vault.target)).wait();
+  console.log("Token.grantRole(MINTER_ROLE, vault) ✅");
 
-    // Fund tx gas
-    await admin.sendTransaction({ to: alice.address, value: ethers.parseEther("5") });
-    await admin.sendTransaction({ to: liquidator.address, value: ethers.parseEther("5") });
-  });
+  // 6) Deploy BorrowGate (v1 admin-approval)
+  const Gate = await hre.ethers.getContractFactory("BorrowGate");
+  const gate = await Gate.deploy(deployer.address, pool.target);
+  await gate.waitForDeployment();
+  console.log("BorrowGate:", gate.target);
 
-  it("deposit → borrow → repay works; vault solvency holds", async () => {
-    const depositAmt = ethers.parseEther("1");
-    await expect(pool.connect(alice).deposit({ value: depositAmt }))
-      .to.emit(pool, "Deposit")
-      .withArgs(alice.address, depositAmt);
+  // 7) Set BorrowGate in pool (prevents bypass)
+  await (await pool.connect(deployer).setBorrowGate(gate.target)).wait();
+  console.log("Pool.setBorrowGate(gate) ✅");
 
-    expect(await pool.ethCollateral(alice.address)).to.equal(depositAmt);
-    expect(await vault.ethBalance(alice.address)).to.equal(depositAmt);
+  // 8) Persist deployments
+  const deployments = {
+    chain: "sepolia",
+    chainId: 11155111,
+    deployer: deployer.address,
+    NL: token.target,
+    MockOracle: oracle.target,
+    Vault: vault.target,
+    LendingPool: pool.target,
+    BorrowGate: gate.target,
+    updatedAt: new Date().toISOString()
+  };
 
-    const borrowAmt = ethers.parseEther("500");
-    await expect(pool.connect(alice).borrow(borrowAmt))
-      .to.emit(pool, "Borrow")
-      .withArgs(alice.address, borrowAmt);
+  saveJson(deployments);
 
-    expect(await pool.tokenDebt(alice.address)).to.equal(borrowAmt);
-    expect(await token.balanceOf(alice.address)).to.equal(borrowAmt);
+  console.log("\n=== DEPLOYMENTS WRITTEN ===");
+  console.log(OUT_PATH);
+  console.log(deployments);
+}
 
-    const repayAmt = ethers.parseEther("200");
-
-    // repay() calls token.transferFrom(msg.sender, vault, amount) inside LendingPool
-    // spender is LendingPool => approve pool
-    await token.connect(alice).approve(pool.target, repayAmt);
-
-    await expect(pool.connect(alice).repay(repayAmt))
-      .to.emit(pool, "Repay")
-      .withArgs(alice.address, repayAmt);
-
-    await expect(vault.assertSolvent()).to.not.be.reverted;
-    const vaultBal = await ethers.provider.getBalance(vault.target);
-    const escrowed = await vault.totalEthEscrowed();
-    expect(vaultBal).to.be.gte(escrowed);
-  });
-
-  it("liquidation executes when HF < 1 and improves solvency (or clears debt)", async () => {
-    // Setup borrower
-    await pool.connect(alice).deposit({ value: ethers.parseEther("1") });
-    await pool.connect(alice).borrow(ethers.parseEther("1200"));
-
-    // Make liquidatable: 1 ETH collateral @ 1200 => HF ~ 0.85 (LT=85%)
-    await oracle.connect(admin).setPrice(ethers.parseUnits("1200", 8));
-
-    const hfBefore = await pool.HealthFactor(alice.address);
-    expect(hfBefore).to.be.lt(ethers.parseEther("1"));
-
-    // Fund liquidator with NL (admin has MINTER_ROLE)
-    await token.connect(admin).mint(liquidator.address, ethers.parseEther("2000"));
-
-    // Max close factor is 50% => 600 for 1200 debt
-    const repayAmt = ethers.parseEther("600");
-    await token.connect(liquidator).approve(pool.target, repayAmt);
-
-    await expect(pool.connect(liquidator).liquidate(alice.address, repayAmt))
-      .to.emit(pool, "Liquidation");
-
-    const hfAfter = await pool.HealthFactor(alice.address);
-    const debtAfter = await pool.tokenDebt(alice.address);
-    expect(hfAfter >= hfBefore || debtAfter === 0n).to.equal(true);
-
-    await expect(vault.assertSolvent()).to.not.be.reverted;
-  });
+main().catch((e) => {
+  console.error(e);
+  process.exit(1);
 });

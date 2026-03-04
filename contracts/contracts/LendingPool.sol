@@ -74,6 +74,13 @@ contract LendingPool is AccessControl, ReentrancyGuard, Pausable {
 
     mapping(address => uint256) public ethCollateral;
     mapping(address => uint256) public tokenDebt;
+    address public creLiquidationReceiver;
+    modifier onlyCREReciever(){
+        require(msg.sender == creLiquidationReceiver , "Note CRE Reciever");
+        _;
+    }
+
+
 
 
     //EVENTS //
@@ -286,8 +293,60 @@ if (seizeAmount > maxSeizeNoWorsen) {
             hfAfter
         );
     }
+/// @notice Automated dynamic liquidation computed by Chainlink CRE.
+    function creLiquidate(address borrower, uint256 repayAmount) external onlyCREReciever nonReentrant whenNotPaused {
+        require(HealthFactor(borrower) < HF_BASE, "Not liquidatable");
+        
+        uint256 debt = tokenDebt[borrower];
+        require(repayAmount > 0 && repayAmount <= debt, "Invalid repay amount");
 
+        // Calculate Collateral to Seize (Base value + 5% Liquidation Bonus)
+        uint256 price18 = _getPrice18();
+        uint256 baseCollateral = (repayAmount * 1e18) / price18;
+        uint256 seizeAmount = baseCollateral + ((baseCollateral * LIQUIDATION_BONUS) / PCT_BASE);
+
+        // Cap to borrower's available collateral
+        uint256 borrowerColl = ethCollateral[borrower];
+        if (seizeAmount > borrowerColl) {
+            seizeAmount = borrowerColl;
+        }
+
+        uint256 hfBefore = HealthFactor(borrower);
+
+        // Effects: Reduce balances
+        tokenDebt[borrower] -= repayAmount;
+        ethCollateral[borrower] -= seizeAmount;
+        
+        // Protocol Treasury seizes the collateral internally
+        ethCollateral[address(this)] += seizeAmount;
+
+        // Prevent dust
+        if (tokenDebt[borrower] < MIN_DEBT) tokenDebt[borrower] = 0;
+        if (ethCollateral[borrower] < MIN_COLLATERAL) ethCollateral[borrower] = 0;
+
+        uint256 hfAfter = HealthFactor(borrower);
+        require(hfAfter >= hfBefore || tokenDebt[borrower] == 0, "No solvency improvement");
+
+        // Move ETH in the Vault
+        vault.transferEscrow(borrower, address(this), seizeAmount);
+
+        emit Liquidation(msg.sender, borrower, repayAmount, seizeAmount, hfBefore, hfAfter);
+    }
     // ADMIN //
+    /// @notice Allows Admin to claim the ETH seized during CRE liquidations
+    function claimProtocolProfits(uint256 amount) external onlyRole(ADMIN_ROLE) nonReentrant {
+        require(ethCollateral[address(this)] >= amount, "Insufficient protocol profits");
+        
+        // Deduct from protocol's internal balance
+        ethCollateral[address(this)] -= amount;
+        
+        // Withdraw from the vault to the admin's wallet
+        vault.withdrawETH(msg.sender, amount);
+    }
+    function setCRELiquidationReceiver(address _reciever) external onlyRole(ADMIN_ROLE){
+        require(_reciever != address(0), "Invalid Reciever");
+        creLiquidationReceiver = _reciever;
+    }
     function setMaxPriceAge(uint256 age) external onlyRole(ADMIN_ROLE) {
         require(age > 0, "age=0");
         maxPriceAge = age;

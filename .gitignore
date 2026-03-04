@@ -31,3 +31,9 @@ client/out/
 # OS
 .DS_Store
 Thumbs.db
+
+circuits/build/
+
+circuits/*.zkey
+
+circuits/*.ptau

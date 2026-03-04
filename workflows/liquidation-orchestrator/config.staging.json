@@ -1,0 +1,10 @@
+{
+  "chainSelectorName": "ethereum-testnet-sepolia",
+
+  "borrowGateAddress": "0x01d91f11f948AB420Ed2876402a60BdF3d1e73A7",
+  "lendingPoolAddress": "0xc3E5446ca742122A549Bb643fa88a6C36faD066f",
+  "receiverAddress": "0x76E419dC736Ce8E430F9236703dB3cd23b77a9Bd",
+  "oracle": "0x09432E9196B9ec5076a965C527A817e6cC675FCD",
+  
+  "gasLimit": "900000"
+}

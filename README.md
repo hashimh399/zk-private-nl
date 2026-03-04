@@ -1,106 +1,149 @@
-# NeuroLedger — ZK Private Pass–Gated Lending + Chainlink CRE Risk Orchestration 
+<div align="center">
 
-**Chainlink Convergence Hackathon Submission**  
-A Next-Gen Lending (NL) protocol on **Ethereum Sepolia** where borrowing is gated by:
-1) a **ZK Private Pass** (privacy-preserving allowlist via Merkle membership + nullifier), and  
-2) a **Chainlink CRE Workflow** that orchestrates **onchain context + external risk data + Gemini LLM reasoning** before approving the borrow.
+# NeuroLedger
+### ZK Private-Pass Gated Lending + Chainlink CRE Risk Orchestration + CRE Liquidation Keeper
 
----
+[![Hackathon](https://img.shields.io/badge/Chainlink-Convergence.svg)](https://chain.link/hackathon)
+[![Network](https://img.shields.io/badge/Network-Ethereum_Sepolia-lightgrey.svg)](https://sepolia.etherscan.io/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-## Live Demo
+**Live App:** https://www.neuroledgers.com/#/zk-private-lending  
+**Protocol Info** https://www.neuroledgers.com/#/
+**Demo Video (3–5 min):** _(add link)_  
+**Network:** Ethereum Sepolia
 
-- dApp: `https://neuroledger.com` *(Sepolia wallet required)*
-- Chainlink Sepolia Faucet (ETH/LINK): `https://faucets.chain.link/sepolia`
-- Demo video (3–5 minutes): `<YOUTUBE_OR_PUBLIC_LINK_HERE>`
-
----
-
-## Hackathon Requirements Checklist
-
-✅ **CRE Workflow** used as orchestration layer  
-✅ Integrates **at least one blockchain**: Ethereum Sepolia  
-✅ Integrates **external system / API / LLM**: Google Gemini + external risk signal API  
-✅ Demonstrates **successful simulation via CRE CLI** (and optionally deployment)  
-✅ **Public GitHub repo**  
-✅ README includes **links to all Chainlink-related files**  
-✅ 3–5 minute **public demo video** showing workflow execution (app + CLI simulate)
-
----
-Chainlink-Related Files (Required Links)
-
-CRE project config: project.yaml
-
-Workflow definition: workflows/zkpass-risk-orchestrator/workflow.yaml
-
-Workflow code (TypeScript): workflows/zkpass-risk-orchestrator/main.ts
-
-Workflow config(s):
-
-workflows/zkpass-risk-orchestrator/config.staging.json
-
-workflows/zkpass-risk-orchestrator/config.production.json
-
-Secrets manifest for simulation/deploy: secrets.yaml
-
-Chainlink consumer contract (IReceiver): contracts/CREBorrowDecisionReceiver.sol
-## High-Level Architecture
-
-### Onchain (Sepolia)
-- `lp.sol` — lending pool core logic (HF-based solvency checks)
-- `vault.sol` — ETH collateral vault/accounting
-- `mockoracle.sol` — price source for HF computation
-- `nl.sol` — ERC20 token borrowed against ETH collateral
-
-Added for this project:
-- `BorrowGate.sol` — 2-step borrow flow: `requestBorrow()` → CRE decision → `executeBorrow()`
-- `BorrowApprovalRegistry.sol` — stores CRE approve/reject decisions keyed by nullifier
-- `CREBorrowDecisionReceiver.sol` — Chainlink consumer contract (`IReceiver.onReport`) called by KeystoneForwarder
-- `ZKPassVerifier.sol` — Groth16 verifier generated from Circom/snarkjs
-
-### Offchain (Chainlink CRE Workflow)
-- Trigger: EVM Log `BorrowRequested`
-- Reads onchain context (borrow amount, collateral value, health factor snapshot)
-- Calls:
-  - External risk signal API (market stress / volatility / etc.)
-  - Google Gemini (LLM) for structured reasoning memo
-- Deterministic policy decides approve/reject
-- Writes result onchain via CRE secure write flow:
-  - signed report → KeystoneForwarder → `CREBorrowDecisionReceiver.onReport()` → registry update
-
-### Frontend (Next.js)
-- Wallet connect (Sepolia)
-- ZK proof generation (Groth16) from locally stored pass package
-- Submit `requestBorrow()`, poll approval status, call `executeBorrow()`
+</div>
 
 ---
 
-## Borrow Flow (Low-Level)
+## ✅ What this project is 
 
-### 0) Pass issuance (offchain admin/operator)
-1. User receives secret `s`
-2. Leaf computed (address-bound pass): `leaf = Poseidon(s, borrowerAddress)`
-3. Leaf added to Merkle tree → new root `R`
-4. Admin updates onchain root: `BorrowGate.setRoot(R)`
-5. User stores pass package locally:
-   - `s`, `root`, `pathElements[]`, `pathIndices[]`, `nonce`
+NeuroLedger is a **policy-aware lending protocol**:
 
-### 1) Borrow request (user)
-User calls `BorrowGate.requestBorrow(...)` with:
-- public inputs: `root`, `nullifier`, `borrower`, `nonce`
-- Groth16 proof for:
-  - membership: `Poseidon(s, borrower) ∈ Merkle(root)`
-  - nullifier: `nullifier = Poseidon(s, scope, borrower, nonce)`
+- **ZK Proof** gates who can borrow (private allowlist / zk-pass)
+- **Chainlink CRE** acts as a decentralized orchestration layer:
+  - **Borrow Risk Workflow (event-driven):** listens to `BorrowRequested` and writes approve/reject on-chain
+  - **Liquidation Workflow (cron-driven):** periodically sweeps positions, checks Health Factor, computes min repay needed to restore solvency, and triggers partial/full liquidations
+- **On-chain contracts enforce execution** (BorrowGate + BorrowApprovalRegistry + LendingPool), using **oracle-backed pricing** for HealthFactor.
 
-Contract verifies proof, stores request as `PENDING`, emits:
-`BorrowRequested(requestId, borrower, nullifier, asset, amount)`
+> Design principle: **policy vs execution separation**  
+> CRE computes risk policy off-chain; smart contracts enforce solvency + execution deterministically on-chain.
 
-### 2) CRE orchestration
-CRE workflow listens for `BorrowRequested`, reads request context, calls external risk + Gemini, decides, and writes onchain approval/rejection.
+---
+# 🔗 Chainlink CRE Workflows (REQUIRED LINKS)
 
-### 3) Borrow execution (user)
-User calls `BorrowGate.executeBorrow(requestId)`:
-- requires registry approval for the request/nullifier
-- consumes nullifier
-- calls into `lp.sol` borrow path (HF re-check still enforced)
-- mints/credits `NL` token to borrower if safe
+## 1) Borrow Risk Orchestrator (event-driven)
+- CRE project config: [project.yaml](./workflows/project.yaml)
+- Secrets manifest: [secrets.yaml](./workflows/secrets.yaml)
+**Workflow Dir:** [cre-borrow-orchestrator](./workflows/zkpass-risk-orchestrator/)
+- Workflow definition: [workflow.yaml](./workflows/zkpass-risk-orchestrator/workflow.yaml)
+- Workflow code:
+  - Entry: [index.ts](./workflows/zkpass-risk-orchestrator/index.ts)
+  - Supporting modules (split files): [evm.ts,http.ts,decision.ts,prompt.ts,types.ts,utils.ts,report.ts](./workflows/zkpass-risk-orchestrator/)
+- Workflow configs:
+  - [./workflows/zkpass-risk-orchestrator/config.staging.json](./workflows/zkpass-risk-orchestrator/config.staging.json)
 
+
+## 2) Liquidation Orchestrator (cron-driven)
+**Workflow Folder:** [liquidation-orchestrator](./workflows/liquidation-orchestrator/)
+
+- Workflow definition: [workflow.yaml](./workflows/liquidation-orchestrator/workflow.yaml)
+- Workflow code:
+  - Entry: [index.ts](./workflows/liquidation-orchestrator/index.ts)
+  - Supporting modules (split files): [evm.ts,math.ts,report.ts,discover.ts](./workflows/liquidation-orchestrator/)
+- Workflow configs:
+  - [./workflows/liquidation-orchestrator/config.staging.json](./workflows/liquidation-orchestrator/config.staging.json)
+
+
+## Chainlink Consumer Contracts (Receivers)
+- Borrow decision receiver: `./contracts/contracts/CREBorrowDecisionReceiver.sol`
+- Liquidation receiver : `./contracts/contracts/CRELiquidationReceiver.sol` 
+---
+---
+
+## 🏗️ System Architecture (diagram)
+
+![NeuroLedger Architecture](./client/neuroledger-ui/public/neuroledger.svg)
+
+---
+
+## 🔁 Borrow Flow (diagram + summary)
+
+![Borrow Flow](./client/neuroledger-ui/public/borrowflow.svg)
+
+**Steps:**
+1) User generates/uploads ZK proof with: `amount, root, nullifier, nonce` + `a,b,c`
+2) `BorrowGate.requestBorrow()` verifies proof + emits `BorrowRequested(requestId, borrower, nullifier, amount)`
+3) **CRE Borrow Risk Workflow** triggers and performs:
+   - On-chain context reads (HF projection, LTV, debt, collateral)
+   - External API: Fear & Greed
+   - LLM: Gemini risk score (`riskScoreBp`)
+   - Decision rule: approve only if **riskScoreBp < 8000** AND deterministic checks pass
+4) CRE writes signed report → `CREBorrowDecisionReceiver` → `BorrowApprovalRegistry`
+5) User calls `BorrowGate.executeBorrow(requestId)` → checks registry decision
+6) If approved, `LendingPool.borrowFor()` transfers NL to borrower
+
+---
+
+## 🔥 Liquidation Flow (diagram + summary)
+
+![Liquidation Flow](./client/neuroledger-ui/public/liquidation.svg)
+
+**Steps:**
+1) **CRE Liquidation Workflow** runs on cron
+2) It scans borrower positions and checks `HealthFactor(user)` (< 1 means unsafe)
+3) Uses **oracle price feed** (via LendingPool) for collateral valuation / HF math
+4) Computes **minimum repay** required to restore HF > 1
+5) Sends report to protocol receiver / executes `LendingPool.creLiquidate(borrower, repayAmount)`
+6) LendingPool enforces:
+   - if `repayAmount >= debtNL` → full liquidation
+   - else → partial liquidation (seize proportional collateral)
+
+---
+
+## 🛡 Guardrails & Trust Boundaries 
+
+**Core safety invariants:**
+- No valid ZK proof → no borrow request accepted
+- Nullifier replay blocked
+- Borrow execution blocked unless registry decision is approved
+- HF + solvency math enforced by LendingPool
+- Liquidation is deterministic on-chain (full vs partial rules)
+- CRE is bounded by receiver + contract logic (policy computed off-chain, enforced on-chain)
+
+---
+
+## 📜 Smart Contracts (Sepolia)
+
+| Contract | What it does |
+|---|---|
+| `BorrowGate.sol` | ZK-gated borrow entrypoint (`requestBorrow` → `executeBorrow`) |
+| `ZKPassVerifier.sol` | Groth16 verifier (validates proof) |
+| `BorrowApprovalRegistry.sol` | Stores decision by `nullifier` (approved/reason/riskScore/ltv/decidedAt) |
+| `CREBorrowDecisionReceiver.sol` | Consumes CRE reports and writes decisions to registry |
+| `LendingPool.sol` | Core accounting + HealthFactor + liquidation execution (`borrowFor`, `creLiquidate`) |
+| `Vault.sol` | Escrows collateral |
+| `NL.sol` | ERC-20 token borrowed by users |
+| `CRELiquidationReciever.sol` | triggers liquidation 
+
+
+
+
+
+---
+
+# ✅ Hackathon Requirements Checklist (explicit)
+
+- [x] **Project description covers use case + stack/architecture**
+- [x] **3–5 min public demo video** (app execution OR CLI simulate)  
+- [x] **Public GitHub repo**
+- [x] **README links to all Chainlink-related files** (above)
+- [x] **CRE workflow used in the project**
+- [x] Workflow integrates:
+  - [x] **Blockchain:** Ethereum Sepolia
+  - [x] **External system:** Alternative.me Fear & Greed API
+  - [x] **LLM:** Gemini API
+- [x] Demonstrates:
+  - [x] **Successful CRE CLI simulation** 
+
+---
