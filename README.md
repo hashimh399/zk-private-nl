@@ -9,7 +9,7 @@
 
 **Live App:** https://www.neuroledgers.com/#/zk-private-lending  
 **Protocol Info** https://www.neuroledgers.com/#/
-**Demo Video (3–5 min):** _(add link)_  
+**Demo Video (3–5 min):** https://www.youtube.com/watch?v=5mZSca-KnXM 
 **Network:** Ethereum Sepolia
 
 </div>
@@ -82,6 +82,12 @@ NeuroLedger is a **policy-aware lending protocol**:
 4) CRE writes signed report → `CREBorrowDecisionReceiver` → `BorrowApprovalRegistry`
 5) User calls `BorrowGate.executeBorrow(requestId)` → checks registry decision
 6) If approved, `LendingPool.borrowFor()` transfers NL to borrower
+
+**BorrowRequested  Transaction**: https://sepolia.etherscan.io/tx/0xc653f1772b53b01e9b151d3e384ff3b9158fb95f2c453e839a71f3c93d8532c6
+
+
+**Execute Borrow Transaction** : https://sepolia.etherscan.io/tx/0x07711bed2879f914df920070d03026dd1848c6e7cae1ffcd98b14dfd06edc654
+
 
 ---
 

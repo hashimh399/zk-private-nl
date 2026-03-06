@@ -3,8 +3,8 @@
   "secret": "0x001249fc9915465fb7c476fd462999f96e9f840b61a8e3d774f85a6bf7edca10",
   "leaf": "0x2c212cdd0e5b5317f93e0c09447261d310bf795051ee2a9343717430fbb19431",
   "root": "0x17029fcb94190d0ef933e5ce6090ad2456d26561884a4328412545ff8c78a4cd",
-  "nullifier": "0x1a268238c280ccd0ef00f78e5113cca43a817a681c74472f1bf7ab21934bbcdc",
-  "nonce": "1",
+  "nullifier": "0x1051acf3e9bd58512036c2aa421a1d6bf9bc6299b8d17381af2619907a3270c6",
+  "nonce": "5",
   "depth": 20,
   "leafIndex": 16,
   "pathElements": [
