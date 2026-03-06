@@ -17111,6 +17111,7 @@ function buildGeminiPrompt(params) {
 function decideBorrow(params) {
   let approved = true;
   let reasonCode = 0;
+  let maxRiskScoreBp = 9000;
   if (params.fearGreed < 0) {
     approved = false;
     reasonCode = 5;
@@ -17126,6 +17127,9 @@ function decideBorrow(params) {
   } else if (params.reqAmount > params.maxBorrowAmount) {
     approved = false;
     reasonCode = 4;
+  } else if (params.riskScoreBp > maxRiskScoreBp) {
+    approved = false;
+    reasonCode = 7;
   }
   return { approved, reasonCode };
 }

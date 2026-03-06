@@ -13,6 +13,7 @@ export type Config = {
   minHfAfterE18: string;
   maxLtvBps: number;
   maxBorrowAmountWei: string;
+  maxRiskScoreBp: number;
 
   enableGemini: boolean;
   geminiModel: string;

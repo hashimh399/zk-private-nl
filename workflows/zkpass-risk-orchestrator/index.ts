@@ -196,6 +196,7 @@ if (cfg.enableGemini) {
       hfAfter,
       minHfAfter: BigInt(cfg.minHfAfterE18),
       ltvBps,
+      riskScoreBp,
       maxLtvBps: cfg.maxLtvBps,
       reqAmount: req.amount,
       maxBorrowAmount: BigInt(cfg.maxBorrowAmountWei),

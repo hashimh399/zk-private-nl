@@ -19,6 +19,7 @@ function initWorkflow(config: Config) {
     console.log("🔍 [CRE Engine] Initiating Protocol Solvency Sweep...");
 
    // const borrowers = await discoverBorrowersByScanningRequests(evmClient, runtime, cfg.borrowGateAddress);
+   //to update: get active borrowers from lendingPool.sol
    const borrowers = new Set<Address>([
       "0x15d265dc32a575755aca19b5eceab8018cdd26f1",
       "0x17ffbcc299688241ed00e0a88ab379ed99d3445b",

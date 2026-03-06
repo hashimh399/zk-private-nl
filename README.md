@@ -77,8 +77,8 @@ NeuroLedger is a **policy-aware lending protocol**:
 3) **CRE Borrow Risk Workflow** triggers and performs:
    - On-chain context reads (HF projection, LTV, debt, collateral)
    - External API: Fear & Greed
-   - LLM: Gemini risk score (`riskScoreBp`)
-   - Decision rule: approve only if **riskScoreBp < 8000** AND deterministic checks pass
+   - AI Agent risk score (`riskScoreBp`) 
+   - Decision rule: approve only if deterministic solvency checks pass AND **riskScoreBp < 9000** **AI Agent has Asymetric VETO power**
 4) CRE writes signed report → `CREBorrowDecisionReceiver` → `BorrowApprovalRegistry`
 5) User calls `BorrowGate.executeBorrow(requestId)` → checks registry decision
 6) If approved, `LendingPool.borrowFor()` transfers NL to borrower
@@ -110,6 +110,7 @@ NeuroLedger is a **policy-aware lending protocol**:
 - HF + solvency math enforced by LendingPool
 - Liquidation is deterministic on-chain (full vs partial rules)
 - CRE is bounded by receiver + contract logic (policy computed off-chain, enforced on-chain)
+- AI Agent Policy Hardcoded and can never approve borrow on its own without passing all Protocol checks.
 
 ---
 
@@ -147,3 +148,50 @@ NeuroLedger is a **policy-aware lending protocol**:
   - [x] **Successful CRE CLI simulation** 
 
 ---
+
+
+To simulate the workflows: 
+
+- Installion Pre-requirements
+CRE CLI (https://docs.chain.link/cre/getting-started/cli-installation)
+bun (https://bun.com/docs/installation#windows)
+.env file in workflow directory
+CRE_ETH_PRIVATE_KEY=YOUR_KEY
+CRE_TARGET=local-simulation
+GEMINI_API_KEY_VAR=YOUR_KEY
+
+CRE Workflow Instructions
+
+Log in with CLI command
+cre login
+
+Navigate to workflow directory
+cd workflow
+
+
+Install modules in workflow directory
+npm i
+
+
+Install CRE SDK Plugin in workflow directory
+bun add @chainlink/cre-sdk-javy-plugin
+
+bun add @chainlink/cre-sdk
+
+bun x cre-seup
+
+Navigate into zkpass-risk-orchestrator
+cd zkpass-risk-orchestrator
+
+Install modules in zkpass-risk-orchestrator directory
+npm i
+
+Install CRE SDK Plugin in zkpass-risk-orchestrator directory
+bun add @chainlink/cre-sdk-javy-plugin
+
+bun add @chainlink/cre-sdk
+
+bun x cre-seup
+
+Verify everything is set up correctly in workflow directory
+cre workflow simulate ./liquidation-orchestrator --project-root . --target staging-settings --broadcast --non-interactive --trigger-index 0

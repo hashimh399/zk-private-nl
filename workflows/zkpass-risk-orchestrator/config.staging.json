@@ -12,7 +12,7 @@
   "minHfAfterE18": "1000000000000000000",
   "maxLtvBps": 8000,
   "maxBorrowAmountWei": "100000000000000000000",
-  "maxRiskScoreBp": 8000,
+  "maxRiskScoreBp": 9000,
 
   "enableGemini": true,
   "geminiModel": "gemini-2.5-flash",
