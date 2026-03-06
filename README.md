@@ -128,7 +128,7 @@ NeuroLedger is a **policy-aware lending protocol**:
 
 ---
 
-## 📜 Smart Contracts (Sepolia)
+## 📜 Smart Contracts (Sepolia) All contracts verified on Etherscan
 
 | Contract | What it does |
 |---|---|
