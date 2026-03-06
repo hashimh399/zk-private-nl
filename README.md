@@ -88,7 +88,12 @@ NeuroLedger is a **policy-aware lending protocol**:
 
 **Execute Borrow Transaction** : https://sepolia.etherscan.io/tx/0x07711bed2879f914df920070d03026dd1848c6e7cae1ffcd98b14dfd06edc654
 
+**withdraw collateral transaction**: https://sepolia.etherscan.io/tx/0xb0cdfbe763ab68d48e0d131b5d97b17d5c9d5be7582a627b393c599fdddec994
 
+
+---
+---
+![CRE Borrow workflow Simulation](./creBorrowSimulate.png)
 ---
 
 ## 🔥 Liquidation Flow (diagram + summary)
@@ -105,6 +110,9 @@ NeuroLedger is a **policy-aware lending protocol**:
    - if `repayAmount >= debtNL` → full liquidation
    - else → partial liquidation (seize proportional collateral)
 
+---
+---
+![CRE Liquidation workdlow simulation](./creLiquidate.png)
 ---
 
 ## 🛡 Guardrails & Trust Boundaries 
@@ -154,50 +162,3 @@ NeuroLedger is a **policy-aware lending protocol**:
   - [x] **Successful CRE CLI simulation** 
 
 ---
-
-
-To simulate the workflows: 
-
-- Installion Pre-requirements
-CRE CLI (https://docs.chain.link/cre/getting-started/cli-installation)
-bun (https://bun.com/docs/installation#windows)
-.env file in workflow directory
-CRE_ETH_PRIVATE_KEY=YOUR_KEY
-CRE_TARGET=local-simulation
-GEMINI_API_KEY_VAR=YOUR_KEY
-
-CRE Workflow Instructions
-
-Log in with CLI command
-cre login
-
-Navigate to workflow directory
-cd workflow
-
-
-Install modules in workflow directory
-npm i
-
-
-Install CRE SDK Plugin in workflow directory
-bun add @chainlink/cre-sdk-javy-plugin
-
-bun add @chainlink/cre-sdk
-
-bun x cre-seup
-
-Navigate into zkpass-risk-orchestrator
-cd zkpass-risk-orchestrator
-
-Install modules in zkpass-risk-orchestrator directory
-npm i
-
-Install CRE SDK Plugin in zkpass-risk-orchestrator directory
-bun add @chainlink/cre-sdk-javy-plugin
-
-bun add @chainlink/cre-sdk
-
-bun x cre-seup
-
-Verify everything is set up correctly in workflow directory
-cre workflow simulate ./liquidation-orchestrator --project-root . --target staging-settings --broadcast --non-interactive --trigger-index 0
