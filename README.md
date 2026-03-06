@@ -110,6 +110,11 @@ NeuroLedger is a **policy-aware lending protocol**:
    - if `repayAmount >= debtNL` → full liquidation
    - else → partial liquidation (seize proportional collateral)
 
+> **🚧 Scheduled Architecture Improvement (Navigating CRE Read Limits)**
+> Due to current Chainlink CRE beta constraints (`PerWorkflow.ChainRead.CallLimit`), running sequential on-chain discovery to find active borrowers inside the workflow loop exhausts the EVM read quota. To prove the core liquidation math engine for this hackathon, the active borrower array is temporarily statically defined off-chain. 
+> 
+> **The immediate post-submission roadmap** includes deploying a `getActiveBorrowers()` view function directly on the `LendingPool` contract. This will allow the CRE workflow to ingest the entire active protocol state in a single, highly efficient EVM read, permanently resolving the infrastructure limitation while making the discovery loop fully dynamic.
+
 ---
 ---
 ![CRE Liquidation workdlow simulation](./creLiquidate.png)
